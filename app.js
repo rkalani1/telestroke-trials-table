@@ -6,177 +6,40 @@ const initialTrials = [
     acronym: "SISTER",
     nctId: "NCT05948566",
     fullName: "Strategy for Improving Stroke Treatment Response",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
+    localPI: "David Tirschwell, MD, MSc",
+    coordinator: "Lauren Klein",
+    email: "lauren.klein@uw.edu",
+    phone: "206-744-3000",
     status: "Recruiting",
-    notes: "TS23 (anti-alpha-2-antiplasmin) for late thrombolysis (4.5-24h). Exclusion: prior lytics/EVT."
+    hypothesis: "A Phase-2, prospective, randomized, placebo-controlled, blinded, dose-finding trial determining the safety and preliminary efficacy of TS23 (a monoclonal antibody against alpha-2-antiplasmin) in acute ischemic stroke.",
+    eligibility: "Anterior circulation acute ischemic stroke\nWithin 4.5–24 hours of onset\nNIHSS ≥ 4\nASPECTS ≥ 6 on CT or ≥ 7 on MRI, with favorable perfusion mismatch/core profile",
+    exclusions: "Received thrombolysis or EVT with clot engagement\nKnown stroke in past 90 days\nPre-stroke mRS > 2"
   },
   {
     acronym: "STEP-EVT",
     nctId: "NCT06289985",
     fullName: "StrokeNet Thrombectomy Endovascular Platform",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
+    localPI: "David Tirschwell, MD, MSc",
+    coordinator: "Lauren Klein",
+    email: "lauren.klein@uw.edu",
+    phone: "206-744-3000",
     status: "Recruiting",
-    notes: "Adaptive platform optimizing EVT for low NIHSS LVO (0-5 + ICA/M1) or MeVO (NIHSS >=8)."
+    hypothesis: "Randomized, multifactorial, adaptive, platform trial optimizing care for AIS due to large- or medium-vessel occlusions (LVOs and MVOs).",
+    eligibility: "Age ≥ 18, pre-stroke mRS 0–2, presentation ≤ 24 h, and qualifying imaging to puncture ≤ 2 h\nLVO population: complete occlusion of intracranial ICA or M1 MCA, with mild deficits (NIHSS 0–5)\nMVO population: non-dominant or co-dominant M2 and M3 MCA occlusions, with NIHSS ≥ 8",
+    exclusions: "CT ASPECTS < 6 or MRI ASPECTS < 7\nAcute occlusions in multiple vascular territories or tandem occlusions"
   },
   {
     acronym: "MINUTE",
     nctId: "NCT07260916",
     fullName: "Minimally Invasive Neuroendoscopic Targeted ICH Evacuation",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
+    localPI: "Michael Levitt, MD",
+    coordinator: "Tyler Ip",
+    email: "siutai@uw.edu",
+    phone: "206-744-9389",
     status: "Not yet recruiting",
-    notes: "SCUBA endoscopic evacuation of basal ganglia hemorrhages (>=20mL) within 16 hours of onset."
-  },
-  {
-    acronym: "TESTED",
-    nctId: "NCT05911568",
-    fullName: "Thrombectomy in Stroke Patients with Pre-existing Disability",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "EVT vs medical therapy in patients with pre-existing disability (mRS 3-4) and acute LVO."
-  },
-  {
-    acronym: "VERIFY",
-    nctId: "NCT05338697",
-    fullName: "TMS / MRI Biomarkers for Upper-Extremity Motor Recovery",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Observational use of TMS and MRI biomarkers to predict upper-extremity motor recovery after AIS."
-  },
-  {
-    acronym: "CLARITY",
-    nctId: "NCT07174414",
-    fullName: "Cilostazol for Prevention of Recurrent Stroke",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Not yet recruiting",
-    notes: "Phase 3 trial evaluating cilostazol for prevention of recurrent stroke in patients taking single antiplatelet."
-  },
-  {
-    acronym: "INTERCEPT",
-    nctId: "NCT05723926",
-    fullName: "Bilateral Carotid-Filter Study in AF-Related Stroke",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Bilateral carotid filters as an adjunct to OAC in AF patients with ischemic stroke within 52 weeks."
-  },
-  {
-    acronym: "ESUS-MRI",
-    nctId: "",
-    fullName: "Qualitative model-based ESUS reclassification using cardiac and cerebral vessel wall MRI",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Active, not recruiting",
-    notes: "Cardiac and cerebellar vessel wall MRI to reclassify ESUS patients into cardioembolic or LAA."
-  },
-  {
-    acronym: "MOCHA",
-    nctId: "",
-    fullName: "Intracranial Vessel Wall Analysis Pipeline for Multi-contrast Multi-platform Applications",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Active, not recruiting",
-    notes: "Intracranial vessel wall imaging along with other clinical findings to identify etiology of ESUS."
-  },
-  {
-    acronym: "ASPIRE",
-    nctId: "NCT03907046",
-    fullName: "Apixaban vs Aspirin Post-ICH in AF",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Apixaban vs aspirin for stroke prevention 14-180 days after ICH in atrial fibrillation."
-  },
-  {
-    acronym: "SCOUTS-3",
-    nctId: "NCT06722755",
-    fullName: "Stroke and CPAP Outcome Study 3",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Evaluating intensive CPAP support for compliance and recovery in stroke survivors undergoing inpatient rehab."
-  },
-  {
-    acronym: "TELE-REHAB-2",
-    nctId: "NCT06682429",
-    fullName: "Home Telerehabilitation Trial for Upper-Extremity Motor Recovery",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Home telerehabilitation trial for upper-extremity motor recovery after radiologically verified stroke."
-  },
-  {
-    acronym: "MR-PICS",
-    nctId: "NCT06506279",
-    fullName: "CorTec Brain Interchange Cortical Stimulation Study",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Feasibility study assessing cortical stimulation to improve motor outcomes in chronic ischemic stroke."
-  },
-  {
-    acronym: "CAPPRICORN-1",
-    nctId: "NCT06393712",
-    fullName: "ALN-APP Study in Patients with Cerebral Amyloid Angiopathy (CAA)",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Evaluating safety and efficacy of intrathecally injected ALN-APP in cerebral amyloid angiopathy."
-  },
-  {
-    acronym: "MIRROR",
-    nctId: "NCT04494295",
-    fullName: "Aurora Surgiscope System Endoscopic ICH Evacuation Registry",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Minimally invasive endoscopic ICH evacuation using Aurora Surgiscope System."
-  },
-  {
-    acronym: "CADASIL",
-    nctId: "NCT05567744",
-    fullName: "CADASIL Registry",
-    localPI: "",
-    coordinator: "",
-    email: "",
-    phone: "",
-    status: "Recruiting",
-    notes: "Longitudinal registry for genetically confirmed or suspected CADASIL."
+    hypothesis: "Prospective, randomized trial evaluating the clinical utility of ultra-early SCUBA neuroendoscopic evacuation of basal-ganglia hemorrhages.",
+    eligibility: "Age 18–80 with pre-ICH mRS 0–2\nNon-traumatic spontaneous basal-ganglia hemorrhage ≥ 20 mL\nRandomization ≤ 16 hours from LKW; anticipated surgery start < 120 minutes from randomization\nNIHSS ≥ 6; CTA/MRA without underlying vascular lesion",
+    exclusions: "Suspected secondary cause, infratentorial/thalamic hemorrhage, or midbrain extension\nINR > 1.4, aPTT > 40 s, DOAC/LMWH use at onset, or platelet count < 100 × 10³/mm³\nGCS < 7, active infection, pregnancy, pre-existing DNR/DNI, or severe dementia"
   }
 ];
 
@@ -193,7 +56,9 @@ const state = {
     showLocalPI: true,
     showCoordinator: true,
     showStatus: true,
-    showNotes: true
+    showHypothesis: true,
+    showEligibility: true,
+    showExclusions: true
   }
 };
 
@@ -215,7 +80,9 @@ const toggleNct = document.getElementById("toggleNct");
 const toggleLocalPI = document.getElementById("toggleLocalPI");
 const toggleCoordinator = document.getElementById("toggleCoordinator");
 const toggleStatus = document.getElementById("toggleStatus");
-const toggleNotes = document.getElementById("toggleNotes");
+const toggleHypothesis = document.getElementById("toggleHypothesis");
+const toggleEligibility = document.getElementById("toggleEligibility");
+const toggleExclusions = document.getElementById("toggleExclusions");
 
 // Save state to local storage
 function saveState() {
@@ -304,8 +171,16 @@ function renderEditorList() {
           </div>
         </div>
         <div class="form-control">
-          <label for="notes-${cardId}">Bedside / Matcher Notes</label>
-          <textarea id="notes-${cardId}" oninput="updateField('${cardId}', 'notes', this.value)">${escapeHTML(trial.notes)}</textarea>
+          <label for="hypothesis-${cardId}">Hypothesis / Summary</label>
+          <textarea id="hypothesis-${cardId}" oninput="updateField('${cardId}', 'hypothesis', this.value)" rows="3">${escapeHTML(trial.hypothesis || "")}</textarea>
+        </div>
+        <div class="form-control">
+          <label for="eligibility-${cardId}">Eligibility Criteria (one per line)</label>
+          <textarea id="eligibility-${cardId}" oninput="updateField('${cardId}', 'eligibility', this.value)" rows="4">${escapeHTML(trial.eligibility || "")}</textarea>
+        </div>
+        <div class="form-control">
+          <label for="exclusions-${cardId}">Key Exclusions (one per line)</label>
+          <textarea id="exclusions-${cardId}" oninput="updateField('${cardId}', 'exclusions', this.value)" rows="4">${escapeHTML(trial.exclusions || "")}</textarea>
         </div>
         <div style="display:flex; justify-content:flex-end; margin-top:0.5rem;">
           <button class="btn btn-danger btn-sm" onclick="removeTrial('${cardId}')">
@@ -364,7 +239,9 @@ btnAddTrial.addEventListener("click", () => {
     email: "",
     phone: "",
     status: "Recruiting",
-    notes: ""
+    hypothesis: "",
+    eligibility: "",
+    exclusions: ""
   });
   state.expandedId = newId;
   saveState();
@@ -398,7 +275,9 @@ const configInputs = [
   { el: toggleLocalPI, key: "showLocalPI", type: "checkbox" },
   { el: toggleCoordinator, key: "showCoordinator", type: "checkbox" },
   { el: toggleStatus, key: "showStatus", type: "checkbox" },
-  { el: toggleNotes, key: "showNotes", type: "checkbox" }
+  { el: toggleHypothesis, key: "showHypothesis", type: "checkbox" },
+  { el: toggleEligibility, key: "showEligibility", type: "checkbox" },
+  { el: toggleExclusions, key: "showExclusions", type: "checkbox" }
 ];
 
 configInputs.forEach(input => {
@@ -551,23 +430,74 @@ function updatePreviewAndCode() {
 `;
 
   // Build Table Head
-  let thColumns = `<th>Trial</th>`;
+  let thColumns = `<th>Study</th>`;
+  if (opt.showHypothesis) thColumns += `<th>Hypothesis / Summary</th>`;
+  if (opt.showEligibility) thColumns += `<th>Eligibility</th>`;
+  if (opt.showExclusions) thColumns += `<th>Key Exclusions</th>`;
   if (opt.showLocalPI) thColumns += `<th>Local PI</th>`;
   if (opt.showCoordinator) thColumns += `<th>Research Coordinator</th>`;
   if (opt.showStatus) thColumns += `<th>Status</th>`;
-  if (opt.showNotes) thColumns += `<th>Eligibility Notes</th>`;
 
   // Build Table Rows
   let tableRows = "";
   state.trials.forEach(trial => {
     let row = `  <tr>\n`;
     
-    // Trial Column
+    // Study Column
     row += `    <td>\n      <span class="trial-badge-acronym">${escapeHTML(trial.acronym)}</span>\n`;
     if (opt.showNct && trial.nctId) {
       row += `      <a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" class="trial-badge-nct trial-link">${escapeHTML(trial.nctId)}</a>\n`;
     }
     row += `    </td>\n`;
+
+    // Hypothesis Column
+    if (opt.showHypothesis) {
+      row += `    <td>${escapeHTML(trial.hypothesis || "—")}</td>\n`;
+    }
+
+    // Eligibility Column
+    if (opt.showEligibility) {
+      row += `    <td>\n`;
+      if (trial.eligibility) {
+        const items = trial.eligibility.split('\n').map(i => i.trim()).filter(Boolean);
+        if (items.length > 1) {
+          row += `      <ul style="padding-left: 20px; margin: 0;">\n`;
+          items.forEach(item => {
+            row += `        <li style="margin-bottom: 4px;">${escapeHTML(item)}</li>\n`;
+          });
+          row += `      </ul>\n`;
+        } else if (items.length === 1) {
+          row += `      ${escapeHTML(items[0])}\n`;
+        } else {
+          row += `      —\n`;
+        }
+      } else {
+        row += `      —\n`;
+      }
+      row += `    </td>\n`;
+    }
+
+    // Key Exclusions Column
+    if (opt.showExclusions) {
+      row += `    <td>\n`;
+      if (trial.exclusions) {
+        const items = trial.exclusions.split('\n').map(i => i.trim()).filter(Boolean);
+        if (items.length > 1) {
+          row += `      <ul style="padding-left: 20px; margin: 0;">\n`;
+          items.forEach(item => {
+            row += `        <li style="margin-bottom: 4px;">${escapeHTML(item)}</li>\n`;
+          });
+          row += `      </ul>\n`;
+        } else if (items.length === 1) {
+          row += `      ${escapeHTML(items[0])}\n`;
+        } else {
+          row += `      —\n`;
+        }
+      } else {
+        row += `      —\n`;
+      }
+      row += `    </td>\n`;
+    }
     
     // Local PI Column
     if (opt.showLocalPI) {
@@ -596,11 +526,6 @@ function updatePreviewAndCode() {
     if (opt.showStatus) {
       const statusClass = getStatusClass(trial.status);
       row += `    <td><span class="status-pill ${statusClass}">${escapeHTML(trial.status || "Unknown")}</span></td>\n`;
-    }
-    
-    // Notes Column
-    if (opt.showNotes) {
-      row += `    <td>${escapeHTML(trial.notes || "—")}</td>\n`;
     }
     
     row += `  </tr>\n`;
