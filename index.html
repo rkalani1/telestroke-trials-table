@@ -24,7 +24,14 @@
         </h1>
         <p>Configure, update, and export the acute stroke trials contact table for the UW Medicine telestroke portal.</p>
       </div>
-      <div>
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <button id="btn-toggle-layout" class="btn btn-secondary btn-sm" style="display:flex; align-items:center; gap:0.4rem;" title="Switch between split side-by-side view and stacked full-width view">
+          <svg class="layout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="12" y1="3" x2="12" y2="21"></line>
+          </svg>
+          <span>Stacked View</span>
+        </button>
         <span class="badge">UW Medicine</span>
       </div>
     </header>
@@ -199,6 +206,6 @@
 
   </div>
 
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

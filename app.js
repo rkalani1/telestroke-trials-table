@@ -45,7 +45,7 @@ const initialTrials = [
 
 // App State
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials_v8")) || [...initialTrials],
+  trials: JSON.parse(localStorage.getItem("telestroke_trials_v9")) || [...initialTrials],
   expandedId: null,
   options: {
     primaryColor: "#0f52ba",
@@ -86,7 +86,7 @@ const toggleExclusions = document.getElementById("toggleExclusions");
 
 // Save state to local storage
 function saveState() {
-  localStorage.setItem("telestroke_trials_v8", JSON.stringify(state.trials));
+  localStorage.setItem("telestroke_trials_v9", JSON.stringify(state.trials));
 }
 
 // Generate unique ID for new trials
@@ -660,6 +660,44 @@ btnCopyImage.addEventListener("click", () => {
     tableEl.style.cssText = originalStyle;
   });
 });
+
+// Workspace Layout Toggler
+const btnToggleLayout = document.getElementById("btn-toggle-layout");
+const workspace = document.querySelector(".workspace");
+
+btnToggleLayout.addEventListener("click", () => {
+  const isStacked = workspace.classList.toggle("stacked-layout");
+  localStorage.setItem("telestroke_layout_preference", isStacked ? "stacked" : "split");
+  updateLayoutButton(isStacked);
+});
+
+function updateLayoutButton(isStacked) {
+  const span = btnToggleLayout.querySelector("span");
+  const svg = btnToggleLayout.querySelector(".layout-icon");
+  
+  if (isStacked) {
+    span.textContent = "Split View";
+    svg.innerHTML = `
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+    `;
+  } else {
+    span.textContent = "Stacked View";
+    svg.innerHTML = `
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="12" y1="3" x2="12" y2="21"></line>
+    `;
+  }
+}
+
+// Load layout preference on initialization
+const savedLayout = localStorage.getItem("telestroke_layout_preference");
+if (savedLayout === "stacked") {
+  workspace.classList.add("stacked-layout");
+  updateLayoutButton(true);
+} else {
+  updateLayoutButton(false);
+}
 
 // App Inits
 renderEditorList();
