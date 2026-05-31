@@ -6,6 +6,8 @@
   <title>Telestroke Trial Directory Builder | UW Medicine</title>
   <meta name="description" content="An interactive database customizer and HTML generator for acute stroke trials. Pre-filled with clinicaltrials.gov identifiers and Harborview/UW principal investigator contacts.">
   <link rel="stylesheet" href="style.css">
+  <!-- html2canvas to capture preview table screenshots -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gRl4m3LkHpVZHyJiNUfOfBDECUPtZyF9SLjiUJ88ux4YY55IpQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 
@@ -127,7 +129,26 @@
 
         <!-- Live Table Preview -->
         <div class="config-group">
-          <h3 class="section-title">Table Live Preview</h3>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <h3 class="section-title" style="margin:0;">Table Live Preview</h3>
+            <div style="display:flex; gap:0.5rem;">
+              <button id="btn-copy-image" class="btn btn-secondary btn-sm" title="Copy screenshot of table preview to clipboard">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy Image
+              </button>
+              <button id="btn-download-image" class="btn btn-secondary btn-sm" title="Download screenshot of table preview as PNG">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download PNG
+              </button>
+            </div>
+          </div>
           <div id="preview-container" class="preview-container">
             <!-- Table dynamically injected here -->
           </div>

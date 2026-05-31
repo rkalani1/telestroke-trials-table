@@ -45,7 +45,7 @@ const initialTrials = [
 
 // App State
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials_v6")) || [...initialTrials],
+  trials: JSON.parse(localStorage.getItem("telestroke_trials_v7")) || [...initialTrials],
   expandedId: null,
   options: {
     primaryColor: "#0f52ba",
@@ -86,7 +86,7 @@ const toggleExclusions = document.getElementById("toggleExclusions");
 
 // Save state to local storage
 function saveState() {
-  localStorage.setItem("telestroke_trials_v6", JSON.stringify(state.trials));
+  localStorage.setItem("telestroke_trials_v7", JSON.stringify(state.trials));
 }
 
 // Generate unique ID for new trials
@@ -586,6 +586,78 @@ btnCopyCode.addEventListener("click", () => {
     }, 2500);
   }).catch(err => {
     alert("Could not copy code to clipboard: " + err);
+  });
+});
+
+// Image Export handlers
+const btnCopyImage = document.getElementById("btn-copy-image");
+const btnDownloadImage = document.getElementById("btn-download-image");
+
+btnDownloadImage.addEventListener("click", () => {
+  const tableEl = previewContainer.querySelector(".telestroke-trials-wrapper");
+  if (!tableEl) return;
+  
+  const originalStyle = tableEl.style.cssText;
+  tableEl.style.backgroundColor = "#ffffff";
+  tableEl.style.padding = "20px";
+  tableEl.style.borderRadius = "8px";
+  
+  html2canvas(tableEl, {
+    useCORS: true,
+    scale: 2,
+    backgroundColor: "#ffffff"
+  }).then(canvas => {
+    tableEl.style.cssText = originalStyle;
+    
+    const link = document.createElement("a");
+    link.download = "telestroke-acute-trials-table.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }).catch(err => {
+    alert("Error generating image: " + err);
+    tableEl.style.cssText = originalStyle;
+  });
+});
+
+btnCopyImage.addEventListener("click", () => {
+  const tableEl = previewContainer.querySelector(".telestroke-trials-wrapper");
+  if (!tableEl) return;
+  
+  const originalStyle = tableEl.style.cssText;
+  tableEl.style.backgroundColor = "#ffffff";
+  tableEl.style.padding = "20px";
+  tableEl.style.borderRadius = "8px";
+  
+  html2canvas(tableEl, {
+    useCORS: true,
+    scale: 2,
+    backgroundColor: "#ffffff"
+  }).then(canvas => {
+    tableEl.style.cssText = originalStyle;
+    
+    canvas.toBlob(blob => {
+      if (!blob) {
+        alert("Failed to generate image blob.");
+        return;
+      }
+      const item = new ClipboardItem({ "image/png": blob });
+      navigator.clipboard.write([item]).then(() => {
+        // Create dynamic toast for image copy success
+        const imageToast = document.createElement("div");
+        imageToast.className = "copied-toast";
+        imageToast.textContent = "Table screenshot copied to clipboard!";
+        imageToast.style.display = "block";
+        document.body.appendChild(imageToast);
+        setTimeout(() => {
+          imageToast.remove();
+        }, 2500);
+      }).catch(err => {
+        alert("Failed to copy image to clipboard: " + err + "\n\nPlease use the 'Download PNG' button instead.");
+      });
+    }, "image/png");
+  }).catch(err => {
+    alert("Error generating image: " + err);
+    tableEl.style.cssText = originalStyle;
   });
 });
 
