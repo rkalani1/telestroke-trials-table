@@ -2,7 +2,7 @@
 
 An interactive web-based database customizer and code generator for acute stroke trials. This standalone tool enables clinical research leads to customize, update, and export a clean contact table for integration into the institution's primary telestroke website.
 
-It comes preloaded with active clinical trial data fetched from ClinicalTrials.gov and verified local contacts for the University of Washington / Harborview Medical Center.
+It comes preloaded with active clinical trial data fetched from ClinicalTrials.gov and verified local contacts for the Regional Stroke Network.
 
 ---
 
