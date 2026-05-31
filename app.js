@@ -45,7 +45,7 @@ const initialTrials = [
 
 // App State
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials_v9")) || [...initialTrials],
+  trials: JSON.parse(localStorage.getItem("telestroke_trials_v10")) || [...initialTrials],
   expandedId: null,
   options: {
     primaryColor: "#0f52ba",
@@ -86,7 +86,7 @@ const toggleExclusions = document.getElementById("toggleExclusions");
 
 // Save state to local storage
 function saveState() {
-  localStorage.setItem("telestroke_trials_v9", JSON.stringify(state.trials));
+  localStorage.setItem("telestroke_trials_v10", JSON.stringify(state.trials));
 }
 
 // Generate unique ID for new trials
@@ -592,30 +592,48 @@ btnCopyCode.addEventListener("click", () => {
 // Image Export handlers
 const btnCopyImage = document.getElementById("btn-copy-image");
 const btnDownloadImage = document.getElementById("btn-download-image");
+const btnCopyEmail = document.getElementById("btn-copy-email");
 
 btnDownloadImage.addEventListener("click", () => {
   const tableEl = previewContainer.querySelector(".telestroke-trials-wrapper");
   if (!tableEl) return;
   
-  const originalStyle = tableEl.style.cssText;
-  tableEl.style.backgroundColor = "#ffffff";
-  tableEl.style.padding = "20px";
-  tableEl.style.borderRadius = "8px";
-  
   html2canvas(tableEl, {
     useCORS: true,
     scale: 2,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
+    onclone: (clonedDoc) => {
+      const clonedWrapper = clonedDoc.querySelector(".telestroke-trials-wrapper");
+      if (clonedWrapper) {
+        clonedWrapper.style.width = "1200px";
+        clonedWrapper.style.maxWidth = "none";
+        clonedWrapper.style.backgroundColor = "#ffffff";
+        clonedWrapper.style.padding = "20px";
+        clonedWrapper.style.borderRadius = "8px";
+        clonedWrapper.style.boxShadow = "none";
+        
+        const clonedContainer = clonedWrapper.querySelector(".telestroke-table-container");
+        if (clonedContainer) {
+          clonedContainer.style.width = "100%";
+          clonedContainer.style.maxWidth = "none";
+          clonedContainer.style.overflow = "visible";
+          clonedContainer.style.border = `${state.options.borderWidth}px solid #e2e8f0`;
+        }
+        
+        const clonedTable = clonedWrapper.querySelector(".telestroke-table");
+        if (clonedTable) {
+          clonedTable.style.width = "100%";
+          clonedTable.style.maxWidth = "none";
+        }
+      }
+    }
   }).then(canvas => {
-    tableEl.style.cssText = originalStyle;
-    
     const link = document.createElement("a");
     link.download = "telestroke-acute-trials-table.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
   }).catch(err => {
     alert("Error generating image: " + err);
-    tableEl.style.cssText = originalStyle;
   });
 });
 
@@ -623,18 +641,36 @@ btnCopyImage.addEventListener("click", () => {
   const tableEl = previewContainer.querySelector(".telestroke-trials-wrapper");
   if (!tableEl) return;
   
-  const originalStyle = tableEl.style.cssText;
-  tableEl.style.backgroundColor = "#ffffff";
-  tableEl.style.padding = "20px";
-  tableEl.style.borderRadius = "8px";
-  
   html2canvas(tableEl, {
     useCORS: true,
     scale: 2,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
+    onclone: (clonedDoc) => {
+      const clonedWrapper = clonedDoc.querySelector(".telestroke-trials-wrapper");
+      if (clonedWrapper) {
+        clonedWrapper.style.width = "1200px";
+        clonedWrapper.style.maxWidth = "none";
+        clonedWrapper.style.backgroundColor = "#ffffff";
+        clonedWrapper.style.padding = "20px";
+        clonedWrapper.style.borderRadius = "8px";
+        clonedWrapper.style.boxShadow = "none";
+        
+        const clonedContainer = clonedWrapper.querySelector(".telestroke-table-container");
+        if (clonedContainer) {
+          clonedContainer.style.width = "100%";
+          clonedContainer.style.maxWidth = "none";
+          clonedContainer.style.overflow = "visible";
+          clonedContainer.style.border = `${state.options.borderWidth}px solid #e2e8f0`;
+        }
+        
+        const clonedTable = clonedWrapper.querySelector(".telestroke-table");
+        if (clonedTable) {
+          clonedTable.style.width = "100%";
+          clonedTable.style.maxWidth = "none";
+        }
+      }
+    }
   }).then(canvas => {
-    tableEl.style.cssText = originalStyle;
-    
     canvas.toBlob(blob => {
       if (!blob) {
         alert("Failed to generate image blob.");
@@ -642,7 +678,6 @@ btnCopyImage.addEventListener("click", () => {
       }
       const item = new ClipboardItem({ "image/png": blob });
       navigator.clipboard.write([item]).then(() => {
-        // Create dynamic toast for image copy success
         const imageToast = document.createElement("div");
         imageToast.className = "copied-toast";
         imageToast.textContent = "Table screenshot copied to clipboard!";
@@ -657,7 +692,171 @@ btnCopyImage.addEventListener("click", () => {
     }, "image/png");
   }).catch(err => {
     alert("Error generating image: " + err);
-    tableEl.style.cssText = originalStyle;
+  });
+});
+
+// Copy Rich HTML Table for Email clients (Gmail, Outlook, etc.)
+btnCopyEmail.addEventListener("click", () => {
+  const opt = state.options;
+  
+  // Build inline styled HTML representation of the table
+  let htmlString = `<table style="width: 100%; border-collapse: collapse; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: ${opt.fontSize}px; color: #1e293b; background-color: #ffffff; border: ${opt.borderWidth}px solid #e2e8f0; text-align: left;">`;
+  
+  // Table Head
+  htmlString += `<thead><tr>`;
+  const thStyle = `background-color: ${opt.primaryColor}; color: #ffffff; font-weight: 600; padding: 10px 14px; border: ${opt.borderWidth}px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; text-align: left;`;
+  
+  htmlString += `<th style="${thStyle}">Study</th>`;
+  if (opt.showHypothesis) htmlString += `<th style="${thStyle}">Hypothesis / Summary</th>`;
+  if (opt.showEligibility) htmlString += `<th style="${thStyle}">Eligibility</th>`;
+  if (opt.showExclusions) htmlString += `<th style="${thStyle}">Key Exclusions</th>`;
+  if (opt.showLocalPI) htmlString += `<th style="${thStyle}">Local PI</th>`;
+  if (opt.showCoordinator) htmlString += `<th style="${thStyle}">Research Coordinator</th>`;
+  if (opt.showStatus) htmlString += `<th style="${thStyle}">Status</th>`;
+  htmlString += `</tr></thead><tbody>`;
+  
+  // Table Rows
+  state.trials.forEach(trial => {
+    htmlString += `<tr>`;
+    const tdStyle = `padding: 12px 14px; border: ${opt.borderWidth}px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: top;`;
+    
+    // Study column
+    htmlString += `<td style="${tdStyle}">`;
+    htmlString += `<span style="font-weight: 700; color: ${opt.primaryColor}; font-size: 1.1em;">${escapeHTML(trial.acronym)}</span>`;
+    if (opt.showNct && trial.nctId) {
+      htmlString += `<br><a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" style="font-family: monospace; font-size: 0.85em; color: ${opt.accentColor}; text-decoration: none; font-weight: 500;">${escapeHTML(trial.nctId)}</a>`;
+    }
+    htmlString += `</td>`;
+    
+    // Hypothesis Column
+    if (opt.showHypothesis) {
+      htmlString += `<td style="${tdStyle}">${escapeHTML(trial.hypothesis || "—")}</td>`;
+    }
+    
+    // Eligibility Column
+    if (opt.showEligibility) {
+      htmlString += `<td style="${tdStyle}">`;
+      if (trial.eligibility) {
+        const items = trial.eligibility.split('\n').map(i => i.trim()).filter(Boolean);
+        if (items.length > 1) {
+          htmlString += `<ul style="padding-left: 20px; margin: 0;">`;
+          items.forEach(item => {
+            htmlString += `<li style="margin-bottom: 4px;">${escapeHTML(item)}</li>`;
+          });
+          htmlString += `</ul>`;
+        } else if (items.length === 1) {
+          htmlString += escapeHTML(items[0]);
+        } else {
+          htmlString += `—`;
+        }
+      } else {
+        htmlString += `—`;
+      }
+      htmlString += `</td>`;
+    }
+    
+    // Key Exclusions Column
+    if (opt.showExclusions) {
+      htmlString += `<td style="${tdStyle}">`;
+      if (trial.exclusions) {
+        const items = trial.exclusions.split('\n').map(i => i.trim()).filter(Boolean);
+        if (items.length > 1) {
+          htmlString += `<ul style="padding-left: 20px; margin: 0;">`;
+          items.forEach(item => {
+            htmlString += `<li style="margin-bottom: 4px;">${escapeHTML(item)}</li>`;
+          });
+          htmlString += `</ul>`;
+        } else if (items.length === 1) {
+          htmlString += escapeHTML(items[0]);
+        } else {
+          htmlString += `—`;
+        }
+      } else {
+        htmlString += `—`;
+      }
+      htmlString += `</td>`;
+    }
+    
+    // Local PI Column
+    if (opt.showLocalPI) {
+      htmlString += `<td style="${tdStyle}">${escapeHTML(trial.localPI || "—")}</td>`;
+    }
+    
+    // Coordinator Column
+    if (opt.showCoordinator) {
+      htmlString += `<td style="${tdStyle}">`;
+      if (trial.coordinator) {
+        htmlString += `<div style="margin-bottom: 4px;"><strong>${escapeHTML(trial.coordinator)}</strong></div>`;
+      }
+      if (trial.email) {
+        htmlString += `<div style="margin-bottom: 4px;"><a href="mailto:${escapeHTML(trial.email)}" style="color: ${opt.accentColor}; text-decoration: none; font-weight: 500;">${escapeHTML(trial.email)}</a></div>`;
+      }
+      if (trial.phone) {
+        htmlString += `<div><span style="font-size: 0.85em; color: #64748b; font-weight: 500;">Tel:</span> <a href="tel:${escapeHTML(trial.phone)}" style="color: ${opt.accentColor}; text-decoration: none; font-weight: 500;">${escapeHTML(trial.phone)}</a></div>`;
+      }
+      if (!trial.coordinator && !trial.email && !trial.phone) {
+        htmlString += `—`;
+      }
+      htmlString += `</td>`;
+    }
+    
+    // Status Column
+    if (opt.showStatus) {
+      let statusBg = "#f8fafc";
+      let statusColor = "#475569";
+      const statusText = trial.status || "Unknown";
+      
+      if (trial.status.toLowerCase() === "recruiting") {
+        statusBg = "#f0fdf4";
+        statusColor = "#166534";
+      } else if (trial.status.toLowerCase() === "not yet recruiting" || trial.status.toLowerCase() === "enrolling by invitation") {
+        statusBg = "#eff6ff";
+        statusColor = "#1e40af";
+      } else if (trial.status.toLowerCase() === "active, not recruiting") {
+        statusBg = "#fffbeb";
+        statusColor = "#92400e";
+      } else if (trial.status.toLowerCase() === "suspended") {
+        statusBg = "#fef2f2";
+        statusColor = "#991b1b";
+      }
+      
+      htmlString += `<td style="${tdStyle}">`;
+      htmlString += `<span style="display: inline-block; padding: 3px 8px; border-radius: 9999px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; background-color: ${statusBg}; color: ${statusColor};">${escapeHTML(statusText)}</span>`;
+      htmlString += `</td>`;
+    }
+    
+    htmlString += `</tr>`;
+  });
+  htmlString += `</tbody></table>`;
+  
+  // Plain text fallback
+  let plainText = "";
+  state.trials.forEach(trial => {
+    plainText += `${trial.acronym.toUpperCase()} (${trial.nctId || "No NCT"})\n`;
+    if (opt.showHypothesis) plainText += `Hypothesis: ${trial.hypothesis || "—"}\n`;
+    if (opt.showLocalPI) plainText += `PI: ${trial.localPI || "—"}\n`;
+    if (opt.showCoordinator) plainText += `Coordinator: ${trial.coordinator || "—"} (${trial.email || ""})\n`;
+    plainText += `Status: ${trial.status || "—"}\n\n`;
+  });
+
+  const htmlBlob = new Blob([htmlString], { type: "text/html" });
+  const textBlob = new Blob([plainText], { type: "text/plain" });
+  const clipboardItem = new ClipboardItem({
+    "text/html": htmlBlob,
+    "text/plain": textBlob
+  });
+  
+  navigator.clipboard.write([clipboardItem]).then(() => {
+    const emailToast = document.createElement("div");
+    emailToast.className = "copied-toast";
+    emailToast.textContent = "HTML Table copied for email! Paste (Cmd+V) directly into Outlook or Gmail.";
+    emailToast.style.display = "block";
+    document.body.appendChild(emailToast);
+    setTimeout(() => {
+      emailToast.remove();
+    }, 3000);
+  }).catch(err => {
+    alert("Failed to copy table for email: " + err);
   });
 });
 
