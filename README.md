@@ -8,7 +8,7 @@ It comes preloaded with active clinical trial data fetched from ClinicalTrials.g
 
 ## Features
 
-- **Pre-filled Acute Trials**: Preloaded with correct NCT IDs and contacts for active acute trials (SISTER, STEP-EVT, PICASSO, TESTED, MOST, RHAPSODY-2, MINUTE, VERIFY, CLARITY).
+- **Pre-filled Acute Trials**: Preloaded with correct NCT IDs and contacts for active acute interventional trials (SISTER, STEP-EVT, and MINUTE).
 - **Responsive Customizer UI**: Interactively select colors, font size, border thickness, and toggle visible columns (NCT ID, PI, Coordinator, Status, Notes).
 - **Live Preview Panel**: Shows exactly how the embedded table will look on the telestroke portal in real-time.
 - **Copy-and-Paste Embed Generator**: Creates a standalone, self-contained HTML/CSS block containing all layout structure and styles.

@@ -7,8 +7,8 @@ const initialTrials = [
     nctId: "NCT05948566",
     fullName: "Strategy for Improving Stroke Treatment Response",
     localPI: "David Tirschwell, MD, MSc",
-    coordinator: "HMC Stroke Research Coordinator",
-    email: "tirsch@uw.edu",
+    coordinator: "Lauren Klein",
+    email: "lauren.klein@uw.edu",
     phone: "206-744-3000",
     status: "Recruiting",
     notes: "TS23 (anti-alpha-2-antiplasmin) for late thrombolysis (4.5-24h). Exclusion: prior lytics/EVT."
@@ -17,10 +17,10 @@ const initialTrials = [
     acronym: "STEP-EVT",
     nctId: "NCT06289985",
     fullName: "StrokeNet Thrombectomy Endovascular Platform",
-    localPI: "HMC Stroke Neurology Service",
-    coordinator: "Stroke Research Coordinator",
-    email: "elmj@musc.edu",
-    phone: "843-876-1605",
+    localPI: "David Tirschwell, MD, MSc",
+    coordinator: "Lauren Klein",
+    email: "lauren.klein@uw.edu",
+    phone: "206-744-3000",
     status: "Recruiting",
     notes: "Adaptive platform optimizing EVT for low NIHSS LVO (0-5 + ICA/M1) or MeVO (NIHSS >=8)."
   },
@@ -28,10 +28,10 @@ const initialTrials = [
     acronym: "MINUTE",
     nctId: "NCT07260916",
     fullName: "Minimally Invasive Neuroendoscopic Targeted ICH Evacuation",
-    localPI: "HMC Neurosurgery Service",
-    coordinator: "On-Call Neurosurgery Resident",
-    email: "ally.qi@mountsinai.org",
-    phone: "209-330-3024",
+    localPI: "Michael Levitt, MD",
+    coordinator: "Tyler Ip",
+    email: "siutai@uw.edu",
+    phone: "206-744-9389",
     status: "Not yet recruiting",
     notes: "SCUBA endoscopic evacuation of basal ganglia hemorrhages (>=20mL) within 16 hours of onset."
   }
@@ -39,7 +39,7 @@ const initialTrials = [
 
 // App State
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials_v2")) || [...initialTrials],
+  trials: JSON.parse(localStorage.getItem("telestroke_trials_v4")) || [...initialTrials],
   expandedId: null,
   options: {
     primaryColor: "#0f52ba",
@@ -76,7 +76,7 @@ const toggleNotes = document.getElementById("toggleNotes");
 
 // Save state to local storage
 function saveState() {
-  localStorage.setItem("telestroke_trials_v2", JSON.stringify(state.trials));
+  localStorage.setItem("telestroke_trials_v4", JSON.stringify(state.trials));
 }
 
 // Generate unique ID for new trials
