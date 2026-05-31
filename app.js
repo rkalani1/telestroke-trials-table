@@ -6,10 +6,10 @@ const initialTrials = [
     acronym: "SISTER",
     nctId: "NCT05948566",
     fullName: "Strategy for Improving Stroke Treatment Response",
-    localPI: "David Tirschwell, MD, MSc",
-    coordinator: "Lauren Klein",
-    email: "lauren.klein@uw.edu",
-    phone: "206-744-3000",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
     status: "Recruiting",
     notes: "TS23 (anti-alpha-2-antiplasmin) for late thrombolysis (4.5-24h). Exclusion: prior lytics/EVT."
   },
@@ -17,10 +17,10 @@ const initialTrials = [
     acronym: "STEP-EVT",
     nctId: "NCT06289985",
     fullName: "StrokeNet Thrombectomy Endovascular Platform",
-    localPI: "David Tirschwell, MD, MSc",
-    coordinator: "Lauren Klein",
-    email: "lauren.klein@uw.edu",
-    phone: "206-744-3000",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
     status: "Recruiting",
     notes: "Adaptive platform optimizing EVT for low NIHSS LVO (0-5 + ICA/M1) or MeVO (NIHSS >=8)."
   },
@@ -28,18 +28,161 @@ const initialTrials = [
     acronym: "MINUTE",
     nctId: "NCT07260916",
     fullName: "Minimally Invasive Neuroendoscopic Targeted ICH Evacuation",
-    localPI: "Michael Levitt, MD",
-    coordinator: "Tyler Ip",
-    email: "siutai@uw.edu",
-    phone: "206-744-9389",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
     status: "Not yet recruiting",
     notes: "SCUBA endoscopic evacuation of basal ganglia hemorrhages (>=20mL) within 16 hours of onset."
+  },
+  {
+    acronym: "TESTED",
+    nctId: "NCT05911568",
+    fullName: "Thrombectomy in Stroke Patients with Pre-existing Disability",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "EVT vs medical therapy in patients with pre-existing disability (mRS 3-4) and acute LVO."
+  },
+  {
+    acronym: "VERIFY",
+    nctId: "NCT05338697",
+    fullName: "TMS / MRI Biomarkers for Upper-Extremity Motor Recovery",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Observational use of TMS and MRI biomarkers to predict upper-extremity motor recovery after AIS."
+  },
+  {
+    acronym: "CLARITY",
+    nctId: "NCT07174414",
+    fullName: "Cilostazol for Prevention of Recurrent Stroke",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Not yet recruiting",
+    notes: "Phase 3 trial evaluating cilostazol for prevention of recurrent stroke in patients taking single antiplatelet."
+  },
+  {
+    acronym: "INTERCEPT",
+    nctId: "NCT05723926",
+    fullName: "Bilateral Carotid-Filter Study in AF-Related Stroke",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Bilateral carotid filters as an adjunct to OAC in AF patients with ischemic stroke within 52 weeks."
+  },
+  {
+    acronym: "ESUS-MRI",
+    nctId: "",
+    fullName: "Qualitative model-based ESUS reclassification using cardiac and cerebral vessel wall MRI",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Active, not recruiting",
+    notes: "Cardiac and cerebellar vessel wall MRI to reclassify ESUS patients into cardioembolic or LAA."
+  },
+  {
+    acronym: "MOCHA",
+    nctId: "",
+    fullName: "Intracranial Vessel Wall Analysis Pipeline for Multi-contrast Multi-platform Applications",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Active, not recruiting",
+    notes: "Intracranial vessel wall imaging along with other clinical findings to identify etiology of ESUS."
+  },
+  {
+    acronym: "ASPIRE",
+    nctId: "NCT03907046",
+    fullName: "Apixaban vs Aspirin Post-ICH in AF",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Apixaban vs aspirin for stroke prevention 14-180 days after ICH in atrial fibrillation."
+  },
+  {
+    acronym: "SCOUTS-3",
+    nctId: "NCT06722755",
+    fullName: "Stroke and CPAP Outcome Study 3",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Evaluating intensive CPAP support for compliance and recovery in stroke survivors undergoing inpatient rehab."
+  },
+  {
+    acronym: "TELE-REHAB-2",
+    nctId: "NCT06682429",
+    fullName: "Home Telerehabilitation Trial for Upper-Extremity Motor Recovery",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Home telerehabilitation trial for upper-extremity motor recovery after radiologically verified stroke."
+  },
+  {
+    acronym: "MR-PICS",
+    nctId: "NCT06506279",
+    fullName: "CorTec Brain Interchange Cortical Stimulation Study",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Feasibility study assessing cortical stimulation to improve motor outcomes in chronic ischemic stroke."
+  },
+  {
+    acronym: "CAPPRICORN-1",
+    nctId: "NCT06393712",
+    fullName: "ALN-APP Study in Patients with Cerebral Amyloid Angiopathy (CAA)",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Evaluating safety and efficacy of intrathecally injected ALN-APP in cerebral amyloid angiopathy."
+  },
+  {
+    acronym: "MIRROR",
+    nctId: "NCT04494295",
+    fullName: "Aurora Surgiscope System Endoscopic ICH Evacuation Registry",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Minimally invasive endoscopic ICH evacuation using Aurora Surgiscope System."
+  },
+  {
+    acronym: "CADASIL",
+    nctId: "NCT05567744",
+    fullName: "CADASIL Registry",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
+    status: "Recruiting",
+    notes: "Longitudinal registry for genetically confirmed or suspected CADASIL."
   }
 ];
 
 // App State
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials_v4")) || [...initialTrials],
+  trials: JSON.parse(localStorage.getItem("telestroke_trials_v5")) || [...initialTrials],
   expandedId: null,
   options: {
     primaryColor: "#0f52ba",
@@ -76,7 +219,7 @@ const toggleNotes = document.getElementById("toggleNotes");
 
 // Save state to local storage
 function saveState() {
-  localStorage.setItem("telestroke_trials_v4", JSON.stringify(state.trials));
+  localStorage.setItem("telestroke_trials_v5", JSON.stringify(state.trials));
 }
 
 // Generate unique ID for new trials
