@@ -25,50 +25,6 @@ const initialTrials = [
     notes: "Adaptive platform optimizing EVT for low NIHSS LVO (0-5 + ICA/M1) or MeVO (NIHSS >=8)."
   },
   {
-    acronym: "PICASSO",
-    nctId: "NCT05611242",
-    fullName: "Tandem Lesion Endovascular Trial",
-    localPI: "Michael Levitt, MD",
-    coordinator: "Tyler Ip",
-    email: "siutai@uw.edu",
-    phone: "206-744-9389",
-    status: "Recruiting",
-    notes: "Emergent carotid stenting + EVT vs EVT alone for tandem extracranial-carotid + intracranial-LVO."
-  },
-  {
-    acronym: "TESTED",
-    nctId: "NCT05911568",
-    fullName: "Thrombectomy in Stroke Patients with Pre-existing Disability",
-    localPI: "David Tirschwell, MD",
-    coordinator: "HMC Stroke Research Coordinator",
-    email: "mistryea@ucmail.uc.edu",
-    phone: "513-558-1291",
-    status: "Recruiting",
-    notes: "EVT vs medical management in acute LVO with pre-existing disability (mRS 3-4)."
-  },
-  {
-    acronym: "MOST",
-    nctId: "NCT03735979",
-    fullName: "Multi-arm Optimization of Stroke Thrombolysis",
-    localPI: "David Tirschwell, MD",
-    coordinator: "On-Call Stroke Fellow",
-    email: "tirsch@uw.edu",
-    phone: "206-744-3000",
-    status: "Completed",
-    notes: "Adaptive platform testing higher dose TNK vs standard dose for AIS with LVO."
-  },
-  {
-    acronym: "RHAPSODY-2",
-    nctId: "NCT05484154",
-    fullName: "3K3A-APC for Neuroprotection in Ischemic Stroke",
-    localPI: "HMC Stroke Neurology Service",
-    coordinator: "Stroke Research Coordinator",
-    email: "tirsch@uw.edu",
-    phone: "206-744-3000",
-    status: "Active, not recruiting",
-    notes: "Adjunctive neuroprotection with 3K3A-APC after IVT and/or EVT in moderate-severe AIS."
-  },
-  {
     acronym: "MINUTE",
     nctId: "NCT07260916",
     fullName: "Minimally Invasive Neuroendoscopic Targeted ICH Evacuation",
@@ -78,34 +34,12 @@ const initialTrials = [
     phone: "209-330-3024",
     status: "Not yet recruiting",
     notes: "SCUBA endoscopic evacuation of basal ganglia hemorrhages (>=20mL) within 16 hours of onset."
-  },
-  {
-    acronym: "VERIFY",
-    nctId: "NCT05338697",
-    fullName: "TMS / MRI Biomarkers for Upper-Extremity Motor Recovery",
-    localPI: "David Tirschwell, MD, MSc",
-    coordinator: "Nicole Mazwi, MD",
-    email: "nmazwi@uw.edu",
-    phone: "206-744-3000",
-    status: "Recruiting",
-    notes: "Observational study predicting upper extremity motor recovery using TMS and MRI biomarkers."
-  },
-  {
-    acronym: "CLARITY",
-    nctId: "NCT07174414",
-    fullName: "Cilostazol for Prevention of Recurrent Stroke Trial",
-    localPI: "UW Stroke Neurology",
-    coordinator: "Stroke Research Coordinator",
-    email: "tirsch@uw.edu",
-    phone: "206-744-3000",
-    status: "Not yet recruiting",
-    notes: "Prevention of recurrent stroke: adding cilostazol vs placebo to single antiplatelet therapy after stroke/TIA."
   }
 ];
 
 // App State
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials")) || [...initialTrials],
+  trials: JSON.parse(localStorage.getItem("telestroke_trials_v2")) || [...initialTrials],
   expandedId: null,
   options: {
     primaryColor: "#0f52ba",
@@ -142,7 +76,7 @@ const toggleNotes = document.getElementById("toggleNotes");
 
 // Save state to local storage
 function saveState() {
-  localStorage.setItem("telestroke_trials", JSON.stringify(state.trials));
+  localStorage.setItem("telestroke_trials_v2", JSON.stringify(state.trials));
 }
 
 // Generate unique ID for new trials
