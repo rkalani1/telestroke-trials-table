@@ -6,23 +6,23 @@ const initialTrials = [
     acronym: "SISTER",
     nctId: "NCT05948566",
     fullName: "Strategy for Improving Stroke Treatment Response",
-    localPI: "David Tirschwell, MD, MSc",
-    coordinator: "Lauren Klein",
-    email: "lauren.klein@uw.edu",
-    phone: "206-744-3000",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
     status: "Recruiting",
     hypothesis: "A Phase-2, prospective, randomized, placebo-controlled, blinded, dose-finding trial determining the safety and preliminary efficacy of TS23 (a monoclonal antibody against alpha-2-antiplasmin) in acute ischemic stroke.",
-    eligibility: "Anterior circulation acute ischemic stroke\nWithin 4.5–24 hours of onset\nNIHSS ≥ 4\nASPECTS ≥ 6 on CT or ≥ 7 on MRI, with favorable perfusion mismatch/core profile",
+    eligibility: "Anterior circulation acute ischemic stroke\nWithin 4.5–24 hours of onset\nNIHSS ≥ 4\nASPECTS ≥ 6 on CT or ≥ 7 on MRI, with favorable perfusion mismatch/row profile",
     exclusions: "Received thrombolysis or EVT with clot engagement\nKnown stroke in past 90 days\nPre-stroke mRS > 2"
   },
   {
     acronym: "STEP-EVT",
     nctId: "NCT06289985",
     fullName: "StrokeNet Thrombectomy Endovascular Platform",
-    localPI: "David Tirschwell, MD, MSc",
-    coordinator: "Lauren Klein",
-    email: "lauren.klein@uw.edu",
-    phone: "206-744-3000",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
     status: "Recruiting",
     hypothesis: "Randomized, multifactorial, adaptive, platform trial optimizing care for AIS due to large- or medium-vessel occlusions (LVOs and MVOs).",
     eligibility: "Age ≥ 18, pre-stroke mRS 0–2, presentation ≤ 24 h, and qualifying imaging to puncture ≤ 2 h\nLVO population: complete occlusion of intracranial ICA or M1 MCA, with mild deficits (NIHSS 0–5)\nMVO population: non-dominant or co-dominant M2 and M3 MCA occlusions, with NIHSS ≥ 8",
@@ -32,10 +32,10 @@ const initialTrials = [
     acronym: "MINUTE",
     nctId: "NCT07260916",
     fullName: "Minimally Invasive Neuroendoscopic Targeted ICH Evacuation",
-    localPI: "Michael Levitt, MD",
-    coordinator: "Tyler Ip",
-    email: "siutai@uw.edu",
-    phone: "206-744-9389",
+    localPI: "",
+    coordinator: "",
+    email: "",
+    phone: "",
     status: "Not yet recruiting",
     hypothesis: "Prospective, randomized trial evaluating the clinical utility of ultra-early SCUBA neuroendoscopic evacuation of basal-ganglia hemorrhages.",
     eligibility: "Age 18–80 with pre-ICH mRS 0–2\nNon-traumatic spontaneous basal-ganglia hemorrhage ≥ 20 mL\nRandomization ≤ 16 hours from LKW; anticipated surgery start < 120 minutes from randomization\nNIHSS ≥ 6; CTA/MRA without underlying vascular lesion",
@@ -45,7 +45,7 @@ const initialTrials = [
 
 // App State
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials_v5")) || [...initialTrials],
+  trials: JSON.parse(localStorage.getItem("telestroke_trials_v6")) || [...initialTrials],
   expandedId: null,
   options: {
     primaryColor: "#0f52ba",
@@ -86,7 +86,7 @@ const toggleExclusions = document.getElementById("toggleExclusions");
 
 // Save state to local storage
 function saveState() {
-  localStorage.setItem("telestroke_trials_v5", JSON.stringify(state.trials));
+  localStorage.setItem("telestroke_trials_v6", JSON.stringify(state.trials));
 }
 
 // Generate unique ID for new trials
