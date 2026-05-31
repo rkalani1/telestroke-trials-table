@@ -45,7 +45,7 @@ const initialTrials = [
 
 // App State
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials_v7")) || [...initialTrials],
+  trials: JSON.parse(localStorage.getItem("telestroke_trials_v8")) || [...initialTrials],
   expandedId: null,
   options: {
     primaryColor: "#0f52ba",
@@ -86,7 +86,7 @@ const toggleExclusions = document.getElementById("toggleExclusions");
 
 // Save state to local storage
 function saveState() {
-  localStorage.setItem("telestroke_trials_v7", JSON.stringify(state.trials));
+  localStorage.setItem("telestroke_trials_v8", JSON.stringify(state.trials));
 }
 
 // Generate unique ID for new trials
