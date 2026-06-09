@@ -6,6 +6,12 @@ It comes preloaded with active clinical trial data fetched from ClinicalTrials.g
 
 ---
 
+## AI-Assisted Update Gate
+
+Use `docs/automedbench-lite.md` before accepting AI-generated changes to preloaded trial data, NCT IDs, local contacts, generated embed HTML, or status notes. The gate requires S1 Plan, S2 Setup, S3 Validate, S4 Execute, and S5 Submit with ClinicalTrials.gov or approved-source trace, preview checks, residual owner review, and no-PHI confirmation.
+
+---
+
 ## Features
 
 - **Pre-filled Acute Trials**: Preloaded with correct NCT IDs and contacts for active acute interventional trials (SISTER, STEP-EVT, and MINUTE).
