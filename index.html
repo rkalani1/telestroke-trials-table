@@ -16,7 +16,9 @@
   <meta name="twitter:description" content="Build and share a regional stroke-network clinical-trial directory.">
   <link rel="stylesheet" href="style.css">
   <!-- html2canvas to capture preview table screenshots -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <!-- html2canvas is only used on export button clicks; defer it so it never blocks first render. -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 
