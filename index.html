@@ -63,76 +63,73 @@
             </svg>
             1. Customize Directory
           </h2>
-          <div class="panel-actions">
-            <button id="btn-reset" class="btn btn-secondary btn-sm" title="Reset to default acute trials list">Reset</button>
-            <button id="btn-add-trial" class="btn btn-primary btn-sm">Add Trial</button>
-          </div>
         </div>
 
-        <!-- Customizer Options -->
-        <div class="config-group">
-          <h3 class="section-title">Table Styling & Theme</h3>
-          <div class="customizer-grid">
-            <div class="form-control">
-              <label for="primaryColor">Primary Color</label>
-              <input type="color" id="primaryColor" value="#0f52ba" title="Choose table header color">
+        <div class="editor-sections">
+          <details id="editor-content" class="editor-disclosure" open>
+            <summary>
+              <span><strong>Content</strong><small>Trials, contacts, and criteria</small></span>
+              <span class="disclosure-state" aria-hidden="true">Open</span>
+            </summary>
+            <div class="editor-disclosure-body">
+              <div class="content-toolbar">
+                <p><strong id="trial-count">3 trials</strong> in this directory</p>
+                <div class="panel-actions">
+                  <button id="btn-reset" class="btn btn-danger btn-sm" title="Reset to the default acute trials list">Reset</button>
+                  <button id="btn-add-trial" class="btn btn-primary btn-sm">Add Trial</button>
+                </div>
+              </div>
+              <div id="trials-list" class="trials-list">
+                <!-- Dynamic Trial Cards will render here -->
+              </div>
             </div>
-            <div class="form-control">
-              <label for="accentColor">Accent / Link Color</label>
-              <input type="color" id="accentColor" value="#0d9488" title="Choose links and action color">
-            </div>
-            <div class="form-control">
-              <label for="fontSize">Base Font Size (px)</label>
-              <input type="number" id="fontSize" value="14" min="11" max="20" step="1">
-            </div>
-            <div class="form-control">
-              <label for="borderWidth">Border Width (px)</label>
-              <input type="number" id="borderWidth" value="1" min="0" max="4" step="1">
-            </div>
-          </div>
-        </div>
+          </details>
 
-        <!-- Columns Configurator -->
-        <div class="config-group">
-          <h3 class="section-title">Show / Hide Columns</h3>
-          <div class="customizer-grid">
-            <label class="toggle-control">
-              <input type="checkbox" id="toggleNct" checked>
-              <span>NCT Registry ID</span>
-            </label>
-            <label class="toggle-control">
-              <input type="checkbox" id="toggleLocalPI" checked>
-              <span>Local PI</span>
-            </label>
-            <label class="toggle-control">
-              <input type="checkbox" id="toggleCoordinator" checked>
-              <span>Coordinator Info</span>
-            </label>
-            <label class="toggle-control">
-              <input type="checkbox" id="toggleStatus" checked>
-              <span>Recruitment Status</span>
-            </label>
-            <label class="toggle-control">
-              <input type="checkbox" id="toggleHypothesis" checked>
-              <span>Hypothesis / Summary</span>
-            </label>
-            <label class="toggle-control">
-              <input type="checkbox" id="toggleEligibility" checked>
-              <span>Eligibility</span>
-            </label>
-            <label class="toggle-control">
-              <input type="checkbox" id="toggleExclusions" checked>
-              <span>Key Exclusions</span>
-            </label>
-          </div>
-        </div>
+          <details id="editor-appearance" class="editor-disclosure">
+            <summary>
+              <span><strong>Appearance</strong><small>Theme and responsive columns</small></span>
+              <span class="disclosure-state" aria-hidden="true">Closed</span>
+            </summary>
+            <div class="editor-disclosure-body">
+              <div class="config-group">
+                <h3 class="section-title">Table styling</h3>
+                <div class="customizer-grid">
+                  <div class="form-control">
+                    <label for="primaryColor">Primary Color</label>
+                    <input type="color" id="primaryColor" value="#0f52ba" title="Choose table header color">
+                  </div>
+                  <div class="form-control">
+                    <label for="accentColor">Accent / Link Color</label>
+                    <input type="color" id="accentColor" value="#0d9488" title="Choose links and action color">
+                  </div>
+                  <div class="form-control">
+                    <label for="fontSize">Base Font Size (px)</label>
+                    <input type="number" id="fontSize" value="14" min="11" max="20" step="1">
+                  </div>
+                  <div class="form-control">
+                    <label for="borderWidth">Border Width (px)</label>
+                    <input type="number" id="borderWidth" value="1" min="0" max="4" step="1">
+                  </div>
+                </div>
+              </div>
 
-        <!-- Trials Editor List -->
-        <div class="config-group">
-          <h3 class="section-title">Acute Stroke Trials Database</h3>
-          <div id="trials-list" class="trials-list">
-            <!-- Dynamic Trial Cards will render here -->
-          </div>
+              <div class="config-group">
+                <div>
+                  <h3 class="section-title">Column visibility</h3>
+                  <p class="config-hint">Auto hides a column only when every trial leaves it empty. Shown and Hidden are explicit overrides.</p>
+                </div>
+                <div id="column-controls" class="column-controls" aria-label="Column visibility">
+                  <label>NCT Registry ID <select id="column-nct" data-column="nct"><option value="auto">Auto</option><option value="shown">Shown</option><option value="hidden">Hidden</option></select></label>
+                  <label>Hypothesis / Summary <select id="column-hypothesis" data-column="hypothesis"><option value="auto">Auto</option><option value="shown">Shown</option><option value="hidden">Hidden</option></select></label>
+                  <label>Eligibility <select id="column-eligibility" data-column="eligibility"><option value="auto">Auto</option><option value="shown">Shown</option><option value="hidden">Hidden</option></select></label>
+                  <label>Key Exclusions <select id="column-exclusions" data-column="exclusions"><option value="auto">Auto</option><option value="shown">Shown</option><option value="hidden">Hidden</option></select></label>
+                  <label>Local PI <select id="column-localPI" data-column="localPI"><option value="auto">Auto</option><option value="shown">Shown</option><option value="hidden">Hidden</option></select></label>
+                  <label>Coordinator Info <select id="column-coordinator" data-column="coordinator"><option value="auto">Auto</option><option value="shown">Shown</option><option value="hidden">Hidden</option></select></label>
+                  <label>Recruitment Status <select id="column-status" data-column="status"><option value="auto">Auto</option><option value="shown">Shown</option><option value="hidden">Hidden</option></select></label>
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
       </section>
 
@@ -177,25 +174,32 @@
               </button>
             </div>
           </div>
-          <div id="preview-container" class="preview-container">
+          <p id="preview-mode-help" class="preview-mode-help" role="status" aria-live="polite"></p>
+          <div id="preview-container" class="preview-container" data-preview-mode="table">
             <!-- Table dynamically injected here -->
           </div>
         </div>
 
         <!-- Code Snippet Box -->
         <div class="config-group">
-          <div class="code-container">
+          <div class="code-container is-collapsed">
             <div class="code-header">
-              <h3 class="section-title">Standalone Embed Code</h3>
-              <button id="btn-copy-code" class="btn btn-primary btn-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-                Copy Embed Code
-              </button>
+              <div>
+                <h3 class="section-title">Standalone Embed Code</h3>
+                <p id="embed-status" class="generated-status">Generated from 3 trials</p>
+              </div>
+              <div class="code-actions">
+                <button id="btn-copy-code" class="btn btn-primary btn-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  Copy
+                </button>
+                <button id="btn-toggle-code" class="btn btn-secondary btn-sm" aria-expanded="false" aria-controls="code-block">Expand</button>
+              </div>
             </div>
-            <pre id="code-block" class="code-block" tabindex="0"></pre>
+            <pre id="code-block" class="code-block" tabindex="0" hidden></pre>
           </div>
         </div>
 
@@ -232,6 +236,7 @@
 
   </div>
 
-  <script src="app.js?v=10"></script>
+  <script src="trial-state.js?v=12"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>
