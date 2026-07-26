@@ -109,21 +109,21 @@ function renderEditorList() {
     card.dataset.id = cardId;
     
     card.innerHTML = `
-      <div class="trial-card-header" onclick="toggleExpand('${cardId}')">
-        <div class="trial-title-wrapper">
+      <button type="button" class="trial-card-header" aria-expanded="${isExpanded}" aria-controls="trial-panel-${cardId}" onclick="toggleExpand('${cardId}')">
+        <span class="trial-title-wrapper">
           <span class="trial-acronym">${escapeHTML(trial.acronym || "UNNAMED")}</span>
           <span class="trial-nct">${escapeHTML(trial.nctId || "No NCT")}</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:0.5rem;">
+        </span>
+        <span class="trial-card-controls" style="display:flex; align-items:center; gap:0.5rem;">
           <span class="badge" style="background-color: ${getStatusBg(trial.status)}; color: ${getStatusTextCol(trial.status)}; border-color: transparent;">
             ${escapeHTML(trial.status || "Unknown")}
           </span>
           <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
-        </div>
-      </div>
-      <div class="trial-card-body">
+        </span>
+      </button>
+      <div id="trial-panel-${cardId}" class="trial-card-body"${isExpanded ? "" : " hidden"}>
         <div class="form-row">
           <div class="form-control">
             <label for="acronym-${cardId}">Trial Acronym</label>
@@ -203,6 +203,12 @@ window.toggleExpand = function(id) {
     state.expandedId = id;
   }
   renderEditorList();
+  requestAnimationFrame(() => {
+    const card = Array.from(trialsListContainer.children).find(
+      (item) => item.dataset.id === id
+    );
+    card?.querySelector(".trial-card-header")?.focus();
+  });
 };
 
 // Update field in state
@@ -430,13 +436,13 @@ function updatePreviewAndCode() {
 `;
 
   // Build Table Head
-  let thColumns = `<th>Study</th>`;
-  if (opt.showHypothesis) thColumns += `<th>Hypothesis / Summary</th>`;
-  if (opt.showEligibility) thColumns += `<th>Eligibility</th>`;
-  if (opt.showExclusions) thColumns += `<th>Key Exclusions</th>`;
-  if (opt.showLocalPI) thColumns += `<th>Local PI</th>`;
-  if (opt.showCoordinator) thColumns += `<th>Research Coordinator</th>`;
-  if (opt.showStatus) thColumns += `<th>Status</th>`;
+  let thColumns = `<th scope="col">Study</th>`;
+  if (opt.showHypothesis) thColumns += `<th scope="col">Hypothesis / Summary</th>`;
+  if (opt.showEligibility) thColumns += `<th scope="col">Eligibility</th>`;
+  if (opt.showExclusions) thColumns += `<th scope="col">Key Exclusions</th>`;
+  if (opt.showLocalPI) thColumns += `<th scope="col">Local PI</th>`;
+  if (opt.showCoordinator) thColumns += `<th scope="col">Research Coordinator</th>`;
+  if (opt.showStatus) thColumns += `<th scope="col">Status</th>`;
 
   // Build Table Rows
   let tableRows = "";
@@ -446,7 +452,7 @@ function updatePreviewAndCode() {
     // Study Column
     row += `    <td>\n      <span class="trial-badge-acronym">${escapeHTML(trial.acronym)}</span>\n`;
     if (opt.showNct && trial.nctId) {
-      row += `      <a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" class="trial-badge-nct trial-link">${escapeHTML(trial.nctId)}</a>\n`;
+      row += `      <a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" rel="noopener noreferrer" class="trial-badge-nct trial-link">${escapeHTML(trial.nctId)}</a>\n`;
     }
     row += `    </td>\n`;
 
@@ -535,7 +541,7 @@ function updatePreviewAndCode() {
   // Complete HTML code block
   const generatedHTML = `<div class="telestroke-trials-wrapper">
   <div class="telestroke-table-container">
-    <table class="telestroke-table">
+    <table class="telestroke-table" aria-label="Acute stroke trials directory">
       <thead>
         <tr>
           ${thColumns}
@@ -706,13 +712,13 @@ btnCopyEmail.addEventListener("click", () => {
   htmlString += `<thead><tr>`;
   const thStyle = `background-color: ${opt.primaryColor}; color: #ffffff; font-weight: 600; padding: 10px 14px; border: ${opt.borderWidth}px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; text-align: left;`;
   
-  htmlString += `<th style="${thStyle}">Study</th>`;
-  if (opt.showHypothesis) htmlString += `<th style="${thStyle}">Hypothesis / Summary</th>`;
-  if (opt.showEligibility) htmlString += `<th style="${thStyle}">Eligibility</th>`;
-  if (opt.showExclusions) htmlString += `<th style="${thStyle}">Key Exclusions</th>`;
-  if (opt.showLocalPI) htmlString += `<th style="${thStyle}">Local PI</th>`;
-  if (opt.showCoordinator) htmlString += `<th style="${thStyle}">Research Coordinator</th>`;
-  if (opt.showStatus) htmlString += `<th style="${thStyle}">Status</th>`;
+  htmlString += `<th scope="col" style="${thStyle}">Study</th>`;
+  if (opt.showHypothesis) htmlString += `<th scope="col" style="${thStyle}">Hypothesis / Summary</th>`;
+  if (opt.showEligibility) htmlString += `<th scope="col" style="${thStyle}">Eligibility</th>`;
+  if (opt.showExclusions) htmlString += `<th scope="col" style="${thStyle}">Key Exclusions</th>`;
+  if (opt.showLocalPI) htmlString += `<th scope="col" style="${thStyle}">Local PI</th>`;
+  if (opt.showCoordinator) htmlString += `<th scope="col" style="${thStyle}">Research Coordinator</th>`;
+  if (opt.showStatus) htmlString += `<th scope="col" style="${thStyle}">Status</th>`;
   htmlString += `</tr></thead><tbody>`;
   
   // Table Rows
@@ -724,7 +730,7 @@ btnCopyEmail.addEventListener("click", () => {
     htmlString += `<td style="${tdStyle}">`;
     htmlString += `<span style="font-weight: 700; color: ${opt.primaryColor}; font-size: 1.1em;">${escapeHTML(trial.acronym)}</span>`;
     if (opt.showNct && trial.nctId) {
-      htmlString += `<br><a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" style="font-family: monospace; font-size: 0.85em; color: ${opt.accentColor}; text-decoration: none; font-weight: 500;">${escapeHTML(trial.nctId)}</a>`;
+      htmlString += `<br><a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" rel="noopener noreferrer" style="font-family: monospace; font-size: 0.85em; color: ${opt.accentColor}; text-decoration: none; font-weight: 500;">${escapeHTML(trial.nctId)}</a>`;
     }
     htmlString += `</td>`;
     

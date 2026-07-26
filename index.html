@@ -38,7 +38,7 @@
         </h1>
         <p>Configure, update, and export the acute stroke trials contact table for the regional telestroke portal.</p>
       </div>
-      <div style="display:flex; align-items:center; gap:1rem;">
+      <div class="header-actions">
         <button id="btn-toggle-layout" class="btn btn-secondary btn-sm" style="display:flex; align-items:center; gap:0.4rem;" title="Switch between split side-by-side view and stacked full-width view">
           <svg class="layout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -63,7 +63,7 @@
             </svg>
             1. Customize Directory
           </h2>
-          <div style="display:flex; gap:0.5rem;">
+          <div class="panel-actions">
             <button id="btn-reset" class="btn btn-secondary btn-sm" title="Reset to default acute trials list">Reset</button>
             <button id="btn-add-trial" class="btn btn-primary btn-sm">Add Trial</button>
           </div>
@@ -150,9 +150,9 @@
 
         <!-- Live Table Preview -->
         <div class="config-group">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <div class="preview-toolbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
             <h3 class="section-title" style="margin:0;">Table Live Preview</h3>
-            <div style="display:flex; gap:0.5rem;">
+            <div class="preview-actions">
               <button id="btn-copy-email" class="btn btn-secondary btn-sm" title="Copy formatted HTML table to clipboard for pasting directly into Outlook/Gmail">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
@@ -216,7 +216,7 @@
     </main>
 
     <!-- Copied success notification toast -->
-    <div id="copied-toast" class="copied-toast">
+    <div id="copied-toast" class="copied-toast" role="status" aria-live="polite">
       Embed code copied to clipboard successfully!
     </div>
 
