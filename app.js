@@ -1,6 +1,7 @@
-// app.js
+// Telestroke Trial Directory Builder
+// One normalized directory model drives cards, the actual-table preview,
+// embed code, image exports, and rich-email output.
 
-// Initial pre-filled trial data from ClinicalTrials.gov and local verification
 const initialTrials = [
   {
     acronym: "SISTER",
@@ -43,200 +44,343 @@ const initialTrials = [
   }
 ];
 
-// App State
+const STORAGE = {
+  trials: "telestroke_trials_v10",
+  options: "telestroke_builder_options_v11",
+  layout: "telestroke_layout_preference",
+  preview: "telestroke_mobile_preview_v11",
+  editor: "telestroke_editor_section_v11"
+};
+
+const DEFAULT_COLUMN_MODES = {
+  nct: "auto",
+  hypothesis: "auto",
+  eligibility: "auto",
+  exclusions: "auto",
+  localPI: "auto",
+  coordinator: "auto",
+  status: "auto"
+};
+
+const COLUMN_DEFS = [
+  { key: "hypothesis", label: "Hypothesis / Summary", value: (trial) => trial.hypothesis },
+  { key: "eligibility", label: "Eligibility", value: (trial) => trial.eligibility, list: true },
+  { key: "exclusions", label: "Key Exclusions", value: (trial) => trial.exclusions, list: true },
+  { key: "localPI", label: "Local PI", value: (trial) => trial.localPI },
+  {
+    key: "coordinator",
+    label: "Research Coordinator",
+    value: (trial) => [trial.coordinator, trial.email, trial.phone].filter(Boolean).join(" ")
+  },
+  { key: "status", label: "Status", value: (trial) => trial.status, status: true }
+];
+
+function readJSON(key, fallback) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return value ?? fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function cloneInitialTrials() {
+  return initialTrials.map((trial, index) => ({ ...trial, id: `trial_${index}` }));
+}
+
+const savedOptions = readJSON(STORAGE.options, {});
+const loadedTrials = readJSON(STORAGE.trials, cloneInitialTrials());
+const mobileMedia = window.matchMedia("(max-width: 1024px)");
+
 const state = {
-  trials: JSON.parse(localStorage.getItem("telestroke_trials_v10")) || [...initialTrials],
+  trials: window.TrialState.hydrateTrials(loadedTrials, cloneInitialTrials),
   expandedId: null,
+  previewMode: sessionStorage.getItem(STORAGE.preview) || "cards",
   options: {
-    primaryColor: "#0f52ba",
-    accentColor: "#0d9488",
-    fontSize: "14",
-    borderWidth: "1",
-    showNct: true,
-    showLocalPI: true,
-    showCoordinator: true,
-    showStatus: true,
-    showHypothesis: true,
-    showEligibility: true,
-    showExclusions: true
+    primaryColor: savedOptions.primaryColor || "#0f52ba",
+    accentColor: savedOptions.accentColor || "#0d9488",
+    fontSize: savedOptions.fontSize || "14",
+    borderWidth: savedOptions.borderWidth || "1",
+    columnModes: { ...DEFAULT_COLUMN_MODES, ...(savedOptions.columnModes || {}) }
   }
 };
 
-// Elements
 const trialsListContainer = document.getElementById("trials-list");
 const btnAddTrial = document.getElementById("btn-add-trial");
 const btnReset = document.getElementById("btn-reset");
 const previewContainer = document.getElementById("preview-container");
+const previewModeHelp = document.getElementById("preview-mode-help");
 const codeBlock = document.getElementById("code-block");
 const btnCopyCode = document.getElementById("btn-copy-code");
+const btnToggleCode = document.getElementById("btn-toggle-code");
+const embedStatus = document.getElementById("embed-status");
+const trialCount = document.getElementById("trial-count");
 const toast = document.getElementById("copied-toast");
-
-// Customizer Inputs
 const primaryColorInput = document.getElementById("primaryColor");
 const accentColorInput = document.getElementById("accentColor");
 const fontSizeInput = document.getElementById("fontSize");
 const borderWidthInput = document.getElementById("borderWidth");
-const toggleNct = document.getElementById("toggleNct");
-const toggleLocalPI = document.getElementById("toggleLocalPI");
-const toggleCoordinator = document.getElementById("toggleCoordinator");
-const toggleStatus = document.getElementById("toggleStatus");
-const toggleHypothesis = document.getElementById("toggleHypothesis");
-const toggleEligibility = document.getElementById("toggleEligibility");
-const toggleExclusions = document.getElementById("toggleExclusions");
+const columnControls = Array.from(document.querySelectorAll("[data-column]"));
+const btnToggleLayout = document.getElementById("btn-toggle-layout");
+const workspace = document.querySelector(".workspace");
+const contentDisclosure = document.getElementById("editor-content");
+const appearanceDisclosure = document.getElementById("editor-appearance");
 
-// Save state to local storage
+let finalEmbedCode = "";
+let currentModel = null;
+
 function saveState() {
-  localStorage.setItem("telestroke_trials_v10", JSON.stringify(state.trials));
+  localStorage.setItem(STORAGE.trials, JSON.stringify(state.trials));
+  localStorage.setItem(STORAGE.options, JSON.stringify(state.options));
 }
 
-// Generate unique ID for new trials
 function generateId() {
-  return "trial_" + Math.random().toString(36).substr(2, 9);
+  return `trial_${Math.random().toString(36).slice(2, 11)}`;
 }
 
-// Render Trial Editor List
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;"
+  }[character]));
+}
+
+function splitLines(value) {
+  return String(value || "").split("\n").map((item) => item.trim()).filter(Boolean);
+}
+
+function getStatusClass(status) {
+  switch (String(status || "").toLowerCase()) {
+    case "recruiting": return "status-recruiting";
+    case "not yet recruiting":
+    case "soon": return "status-not-recruiting";
+    case "active, not recruiting": return "status-active-not-recruiting";
+    case "suspended": return "status-suspended";
+    case "completed": return "status-completed";
+    default: return "";
+  }
+}
+
+function getStatusBg(status) {
+  const colors = {
+    "recruiting": "hsl(145, 63%, 96%)",
+    "not yet recruiting": "hsl(215, 82%, 96%)",
+    "active, not recruiting": "hsl(38, 92%, 96%)",
+    "suspended": "hsl(355, 78%, 97%)"
+  };
+  return colors[String(status || "").toLowerCase()] || "hsl(220, 16%, 95%)";
+}
+
+function getStatusTextCol(status) {
+  const colors = {
+    "recruiting": "hsl(145, 63%, 32%)",
+    "not yet recruiting": "hsl(215, 82%, 38%)",
+    "active, not recruiting": "hsl(38, 92%, 34%)",
+    "suspended": "hsl(355, 78%, 42%)"
+  };
+  return colors[String(status || "").toLowerCase()] || "hsl(220, 16%, 36%)";
+}
+
+function hasColumnData(key) {
+  if (key === "nct") return state.trials.some((trial) => String(trial.nctId || "").trim());
+  const definition = COLUMN_DEFS.find((item) => item.key === key);
+  return Boolean(definition && state.trials.some((trial) => String(definition.value(trial) || "").trim()));
+}
+
+function isColumnVisible(key) {
+  const mode = state.options.columnModes[key] || "auto";
+  if (mode === "shown") return true;
+  if (mode === "hidden") return false;
+  return hasColumnData(key);
+}
+
+function getDirectoryModel() {
+  const visible = Object.fromEntries(
+    Object.keys(DEFAULT_COLUMN_MODES).map((key) => [key, isColumnVisible(key)])
+  );
+  return {
+    trials: state.trials.map((trial) => ({ ...trial })),
+    visible,
+    columns: COLUMN_DEFS.filter((definition) => visible[definition.key])
+  };
+}
+
 function renderEditorList() {
   trialsListContainer.innerHTML = "";
-  
-  state.trials.forEach((trial, index) => {
-    const cardId = trial.id || `trial_${index}`;
-    if (!trial.id) trial.id = cardId;
+  trialCount.textContent = `${state.trials.length} ${state.trials.length === 1 ? "trial" : "trials"}`;
 
+  state.trials.forEach((trial) => {
+    const cardId = trial.id;
     const isExpanded = state.expandedId === cardId;
-    
-    const card = document.createElement("div");
+    const card = document.createElement("article");
     card.className = `trial-card ${isExpanded ? "expanded active" : ""}`;
     card.dataset.id = cardId;
-    
     card.innerHTML = `
       <button type="button" class="trial-card-header" aria-expanded="${isExpanded}" aria-controls="trial-panel-${cardId}" onclick="toggleExpand('${cardId}')">
         <span class="trial-title-wrapper">
           <span class="trial-acronym">${escapeHTML(trial.acronym || "UNNAMED")}</span>
           <span class="trial-nct">${escapeHTML(trial.nctId || "No NCT")}</span>
         </span>
-        <span class="trial-card-controls" style="display:flex; align-items:center; gap:0.5rem;">
-          <span class="badge" style="background-color: ${getStatusBg(trial.status)}; color: ${getStatusTextCol(trial.status)}; border-color: transparent;">
-            ${escapeHTML(trial.status || "Unknown")}
-          </span>
-          <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
+        <span class="trial-card-controls">
+          <span class="badge" style="background-color:${getStatusBg(trial.status)};color:${getStatusTextCol(trial.status)};border-color:transparent">${escapeHTML(trial.status || "Unknown")}</span>
+          <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </span>
       </button>
       <div id="trial-panel-${cardId}" class="trial-card-body"${isExpanded ? "" : " hidden"}>
         <div class="form-row">
-          <div class="form-control">
-            <label for="acronym-${cardId}">Trial Acronym</label>
-            <input type="text" id="acronym-${cardId}" value="${escapeHTML(trial.acronym)}" oninput="updateField('${cardId}', 'acronym', this.value)">
-          </div>
-          <div class="form-control">
-            <label for="nct-${cardId}">ClinicalTrials.gov NCT ID</label>
-            <input type="text" id="nct-${cardId}" value="${escapeHTML(trial.nctId)}" oninput="updateField('${cardId}', 'nctId', this.value)">
-          </div>
+          <div class="form-control"><label for="acronym-${cardId}">Trial Acronym</label><input type="text" id="acronym-${cardId}" value="${escapeHTML(trial.acronym)}" oninput="updateField('${cardId}','acronym',this.value)"></div>
+          <div class="form-control"><label for="nct-${cardId}">ClinicalTrials.gov NCT ID</label><input type="text" id="nct-${cardId}" value="${escapeHTML(trial.nctId)}" oninput="updateField('${cardId}','nctId',this.value)"></div>
         </div>
-        <div class="form-control">
-          <label for="fullName-${cardId}">Full Study Name</label>
-          <input type="text" id="fullName-${cardId}" value="${escapeHTML(trial.fullName)}" oninput="updateField('${cardId}', 'fullName', this.value)">
+        <div class="form-control"><label for="fullName-${cardId}">Full Study Name</label><input type="text" id="fullName-${cardId}" value="${escapeHTML(trial.fullName)}" oninput="updateField('${cardId}','fullName',this.value)"></div>
+        <div class="form-row">
+          <div class="form-control"><label for="pi-${cardId}">Local Principal Investigator</label><input type="text" id="pi-${cardId}" value="${escapeHTML(trial.localPI)}" oninput="updateField('${cardId}','localPI',this.value)"></div>
+          <div class="form-control"><label for="coord-${cardId}">Study Coordinator / Contact</label><input type="text" id="coord-${cardId}" value="${escapeHTML(trial.coordinator)}" oninput="updateField('${cardId}','coordinator',this.value)"></div>
         </div>
         <div class="form-row">
-          <div class="form-control">
-            <label for="pi-${cardId}">Local Principal Investigator</label>
-            <input type="text" id="pi-${cardId}" value="${escapeHTML(trial.localPI)}" oninput="updateField('${cardId}', 'localPI', this.value)">
-          </div>
-          <div class="form-control">
-            <label for="coord-${cardId}">Study Coordinator / Contact</label>
-            <input type="text" id="coord-${cardId}" value="${escapeHTML(trial.coordinator)}" oninput="updateField('${cardId}', 'coordinator', this.value)">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-control">
-            <label for="email-${cardId}">Contact Email</label>
-            <input type="email" id="email-${cardId}" value="${escapeHTML(trial.email)}" oninput="updateField('${cardId}', 'email', this.value)">
-          </div>
-          <div class="form-control">
-            <label for="phone-${cardId}">Contact Phone</label>
-            <input type="tel" id="phone-${cardId}" value="${escapeHTML(trial.phone)}" oninput="updateField('${cardId}', 'phone', this.value)">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-control">
-            <label for="status-${cardId}">Local Recruitment Status</label>
-            <select id="status-${cardId}" onchange="updateField('${cardId}', 'status', this.value)">
-              <option value="Recruiting" ${trial.status === 'Recruiting' ? 'selected' : ''}>Recruiting</option>
-              <option value="Not yet recruiting" ${trial.status === 'Not yet recruiting' ? 'selected' : ''}>Not yet recruiting</option>
-              <option value="Active, not recruiting" ${trial.status === 'Active, not recruiting' ? 'selected' : ''}>Active, not recruiting</option>
-              <option value="Suspended" ${trial.status === 'Suspended' ? 'selected' : ''}>Suspended</option>
-              <option value="Completed" ${trial.status === 'Completed' ? 'selected' : ''}>Completed</option>
-            </select>
-          </div>
+          <div class="form-control"><label for="email-${cardId}">Contact Email</label><input type="email" id="email-${cardId}" value="${escapeHTML(trial.email)}" oninput="updateField('${cardId}','email',this.value)"></div>
+          <div class="form-control"><label for="phone-${cardId}">Contact Phone</label><input type="tel" id="phone-${cardId}" value="${escapeHTML(trial.phone)}" oninput="updateField('${cardId}','phone',this.value)"></div>
         </div>
         <div class="form-control">
-          <label for="hypothesis-${cardId}">Hypothesis / Summary</label>
-          <textarea id="hypothesis-${cardId}" oninput="updateField('${cardId}', 'hypothesis', this.value)" rows="3">${escapeHTML(trial.hypothesis || "")}</textarea>
+          <label for="status-${cardId}">Local Recruitment Status</label>
+          <select id="status-${cardId}" onchange="updateField('${cardId}','status',this.value)">
+            ${["Recruiting", "Not yet recruiting", "Active, not recruiting", "Suspended", "Completed"].map((status) => `<option value="${status}"${trial.status === status ? " selected" : ""}>${status}</option>`).join("")}
+          </select>
         </div>
-        <div class="form-control">
-          <label for="eligibility-${cardId}">Eligibility Criteria (one per line)</label>
-          <textarea id="eligibility-${cardId}" oninput="updateField('${cardId}', 'eligibility', this.value)" rows="4">${escapeHTML(trial.eligibility || "")}</textarea>
-        </div>
-        <div class="form-control">
-          <label for="exclusions-${cardId}">Key Exclusions (one per line)</label>
-          <textarea id="exclusions-${cardId}" oninput="updateField('${cardId}', 'exclusions', this.value)" rows="4">${escapeHTML(trial.exclusions || "")}</textarea>
-        </div>
-        <div style="display:flex; justify-content:flex-end; margin-top:0.5rem;">
-          <button class="btn btn-danger btn-sm" onclick="removeTrial('${cardId}')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            Remove Trial
-          </button>
-        </div>
-      </div>
-    `;
-    
+        <div class="form-control"><label for="hypothesis-${cardId}">Hypothesis / Summary</label><textarea id="hypothesis-${cardId}" oninput="updateField('${cardId}','hypothesis',this.value)" rows="3">${escapeHTML(trial.hypothesis)}</textarea></div>
+        <div class="form-control"><label for="eligibility-${cardId}">Eligibility Criteria (one per line)</label><textarea id="eligibility-${cardId}" oninput="updateField('${cardId}','eligibility',this.value)" rows="4">${escapeHTML(trial.eligibility)}</textarea></div>
+        <div class="form-control"><label for="exclusions-${cardId}">Key Exclusions (one per line)</label><textarea id="exclusions-${cardId}" oninput="updateField('${cardId}','exclusions',this.value)" rows="4">${escapeHTML(trial.exclusions)}</textarea></div>
+        <div class="trial-remove-row"><button type="button" class="btn btn-danger btn-sm" onclick="removeTrial('${cardId}')">Remove Trial</button></div>
+      </div>`;
     trialsListContainer.appendChild(card);
   });
 }
 
-// Expand/Collapse Trial Editor Card
-window.toggleExpand = function(id) {
-  if (state.expandedId === id) {
-    state.expandedId = null;
-  } else {
-    state.expandedId = id;
-  }
+window.toggleExpand = function toggleExpand(id) {
+  state.expandedId = state.expandedId === id ? null : id;
   renderEditorList();
   requestAnimationFrame(() => {
-    const card = Array.from(trialsListContainer.children).find(
-      (item) => item.dataset.id === id
-    );
-    card?.querySelector(".trial-card-header")?.focus();
+    trialsListContainer.querySelector(`[data-id="${CSS.escape(id)}"] .trial-card-header`)?.focus();
   });
 };
 
-// Update field in state
-window.updateField = function(id, field, value) {
-  const trial = state.trials.find(t => t.id === id);
-  if (trial) {
-    trial[field] = value;
-    saveState();
-    updatePreviewAndCode();
-  }
+window.updateField = function updateField(id, field, value) {
+  const trial = state.trials.find((item) => item.id === id);
+  if (!trial) return;
+  trial[field] = value;
+  saveState();
+  renderOutputs();
 };
 
-// Remove trial
-window.removeTrial = function(id) {
-  state.trials = state.trials.filter(t => t.id !== id);
-  if (state.expandedId === id) {
-    state.expandedId = null;
-  }
+window.removeTrial = function removeTrial(id) {
+  state.trials = state.trials.filter((item) => item.id !== id);
+  if (state.expandedId === id) state.expandedId = null;
   saveState();
   renderEditorList();
-  updatePreviewAndCode();
+  renderOutputs();
 };
 
-// Add new trial
+function renderLines(value) {
+  const items = splitLines(value);
+  if (!items.length) return "—";
+  if (items.length === 1) return escapeHTML(items[0]);
+  return `<ul>${items.map((item) => `<li>${escapeHTML(item)}</li>`).join("")}</ul>`;
+}
+
+function renderCoordinator(trial) {
+  const parts = [];
+  if (trial.coordinator) parts.push(`<strong>${escapeHTML(trial.coordinator)}</strong>`);
+  if (trial.email) parts.push(`<a href="mailto:${escapeHTML(trial.email)}" class="trial-link">${escapeHTML(trial.email)}</a>`);
+  if (trial.phone) parts.push(`<a href="tel:${escapeHTML(trial.phone)}" class="trial-link">${escapeHTML(trial.phone)}</a>`);
+  return parts.length ? parts.map((item) => `<div class="contact-item">${item}</div>`).join("") : "—";
+}
+
+function renderCell(trial, definition) {
+  if (definition.key === "coordinator") return renderCoordinator(trial);
+  if (definition.status) return `<span class="status-pill ${getStatusClass(trial.status)}">${escapeHTML(trial.status || "Unknown")}</span>`;
+  if (definition.list) return renderLines(definition.value(trial));
+  return escapeHTML(definition.value(trial) || "—");
+}
+
+function buildTableMarkup(model) {
+  const headers = [`<th scope="col">Study</th>`, ...model.columns.map((column) => `<th scope="col">${column.label}</th>`)].join("");
+  const rows = model.trials.map((trial) => {
+    const study = `
+      <td>
+        <span class="trial-badge-acronym">${escapeHTML(trial.acronym || "Unnamed")}</span>
+        ${trial.fullName ? `<span class="trial-full-name">${escapeHTML(trial.fullName)}</span>` : ""}
+        ${model.visible.nct && trial.nctId ? `<a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" rel="noopener noreferrer" class="trial-badge-nct trial-link">${escapeHTML(trial.nctId)}</a>` : ""}
+      </td>`;
+    return `<tr>${study}${model.columns.map((column) => `<td>${renderCell(trial, column)}</td>`).join("")}</tr>`;
+  }).join("");
+  return `<div class="telestroke-trials-wrapper"><div class="telestroke-table-container" tabindex="0" role="region" aria-label="Scrollable acute stroke trials table"><table class="telestroke-table" aria-label="Acute stroke trials directory"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+function buildCardMarkup(model) {
+  return `<div class="directory-card-list" aria-label="Acute stroke trials card preview">${model.trials.map((trial) => `
+    <article class="directory-preview-card">
+      <header>
+        <div><strong>${escapeHTML(trial.acronym || "Unnamed")}</strong>${trial.fullName ? `<span>${escapeHTML(trial.fullName)}</span>` : ""}</div>
+        ${model.visible.status ? `<span class="status-pill ${getStatusClass(trial.status)}">${escapeHTML(trial.status || "Unknown")}</span>` : ""}
+      </header>
+      ${model.visible.nct && trial.nctId ? `<a class="trial-link card-nct" href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" rel="noopener noreferrer">${escapeHTML(trial.nctId)}</a>` : ""}
+      <dl>
+        ${model.columns.filter((column) => column.key !== "status").map((column) => `<div><dt>${column.label}</dt><dd>${renderCell(trial, column)}</dd></div>`).join("")}
+      </dl>
+    </article>`).join("")}</div>`;
+}
+
+function buildEmbedStyles() {
+  const opt = state.options;
+  return `<style>
+.telestroke-trials-wrapper{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:1.5rem 0;width:100%;color:#1e293b}
+.telestroke-table-container{overflow-x:auto;border:${opt.borderWidth}px solid #e2e8f0;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.08);scrollbar-gutter:stable}
+.telestroke-table{width:100%;min-width:760px;border-collapse:separate;border-spacing:0;text-align:left;font-size:${opt.fontSize}px}
+.telestroke-table th{position:sticky;top:0;background:${opt.primaryColor};color:#fff;font-weight:650;padding:11px 14px;border-bottom:2px solid #cbd5e1;z-index:2}
+.telestroke-table td{padding:13px 14px;border-bottom:1px solid #e2e8f0;vertical-align:top;background:#fff}
+.telestroke-table th:first-child,.telestroke-table td:first-child{position:sticky;left:0;min-width:180px;z-index:3}
+.telestroke-table th:first-child{background:${opt.primaryColor};z-index:4}.telestroke-table tr:last-child td{border-bottom:0}
+.telestroke-table tr:hover td{background:#f8fafc}.telestroke-table tr:hover td:first-child{background:#f8fafc}
+.trial-badge-acronym{display:block;font-weight:750;color:${opt.primaryColor};font-size:1.08em}.trial-full-name{display:block;margin-top:3px;color:#334155;font-size:.9em;line-height:1.3}
+.trial-badge-nct{display:inline-block;margin-top:6px;font:600 .82em ui-monospace,SFMono-Regular,Menlo,monospace}.trial-link{color:${opt.accentColor};text-decoration:underline;text-underline-offset:2px}
+.status-pill{display:inline-block;padding:4px 8px;border-radius:9999px;font-size:.75em;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.status-recruiting{background:#dcfce7;color:#166534}.status-not-recruiting{background:#dbeafe;color:#1e40af}.status-active-not-recruiting{background:#fef3c7;color:#92400e}.status-suspended{background:#fee2e2;color:#991b1b}.status-completed{background:#f1f5f9;color:#475569}
+.contact-item{margin-bottom:5px}.contact-item:last-child{margin-bottom:0}.telestroke-table ul{margin:0;padding-left:18px}.telestroke-table li+li{margin-top:4px}
+</style>`;
+}
+
+function renderOutputs() {
+  currentModel = getDirectoryModel();
+  const tableMarkup = buildTableMarkup(currentModel);
+  finalEmbedCode = `${buildEmbedStyles()}${tableMarkup}`;
+  codeBlock.textContent = finalEmbedCode.trim();
+  const columnCount = 1 + currentModel.columns.length;
+  embedStatus.textContent = `Generated from ${currentModel.trials.length} ${currentModel.trials.length === 1 ? "trial" : "trials"} · ${columnCount} visible ${columnCount === 1 ? "column" : "columns"}`;
+  trialCount.textContent = `${currentModel.trials.length} ${currentModel.trials.length === 1 ? "trial" : "trials"}`;
+
+  const mode = mobileMedia.matches ? state.previewMode : "table";
+  previewContainer.dataset.previewMode = mode;
+  if (mode === "cards") {
+    previewContainer.innerHTML = `<span class="preview-badge">Card Preview</span>${buildCardMarkup(currentModel)}`;
+    previewModeHelp.textContent = `Card preview · ${columnCount} visible columns represented · switch to Actual table for the WYSIWYG embed.`;
+  } else {
+    previewContainer.innerHTML = `<span class="preview-badge">Actual Table</span><p class="scroll-cue">Swipe or scroll horizontally to inspect every visible column.</p>${finalEmbedCode}`;
+    previewModeHelp.textContent = `Actual-table preview · ${columnCount} visible columns · sticky Study column.`;
+  }
+}
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.style.display = "block";
+  window.setTimeout(() => { toast.style.display = "none"; }, 2600);
+}
+
 btnAddTrial.addEventListener("click", () => {
-  const newId = generateId();
+  const id = generateId();
   state.trials.push({
-    id: newId,
+    id,
     acronym: "NEW-TRIAL",
     nctId: "",
     fullName: "",
@@ -249,661 +393,234 @@ btnAddTrial.addEventListener("click", () => {
     eligibility: "",
     exclusions: ""
   });
-  state.expandedId = newId;
+  state.expandedId = id;
   saveState();
   renderEditorList();
-  updatePreviewAndCode();
-  
-  // Scroll to bottom of trials list
-  setTimeout(() => {
-    trialsListContainer.scrollTop = trialsListContainer.scrollHeight;
-  }, 100);
+  renderOutputs();
+  requestAnimationFrame(() => {
+    trialsListContainer.querySelector(`[data-id="${CSS.escape(id)}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
 });
 
-// Reset to default trials
 btnReset.addEventListener("click", () => {
-  if (confirm("Are you sure you want to reset the trials back to the default acute stroke trials database? This will overwrite your custom changes.")) {
-    state.trials = [...initialTrials];
-    state.expandedId = null;
+  if (!window.confirm("Reset the directory to the default acute stroke trials? Your current edits will be replaced.")) return;
+  state.trials = cloneInitialTrials();
+  state.expandedId = null;
+  saveState();
+  renderEditorList();
+  renderOutputs();
+  showToast("Defaults restored.");
+});
+
+[
+  [primaryColorInput, "primaryColor"],
+  [accentColorInput, "accentColor"],
+  [fontSizeInput, "fontSize"],
+  [borderWidthInput, "borderWidth"]
+].forEach(([element, key]) => {
+  element.value = state.options[key];
+  element.addEventListener("input", () => {
+    state.options[key] = element.value;
     saveState();
-    renderEditorList();
-    updatePreviewAndCode();
-  }
-});
-
-// Customizer Events
-const configInputs = [
-  { el: primaryColorInput, key: "primaryColor" },
-  { el: accentColorInput, key: "accentColor" },
-  { el: fontSizeInput, key: "fontSize" },
-  { el: borderWidthInput, key: "borderWidth" },
-  { el: toggleNct, key: "showNct", type: "checkbox" },
-  { el: toggleLocalPI, key: "showLocalPI", type: "checkbox" },
-  { el: toggleCoordinator, key: "showCoordinator", type: "checkbox" },
-  { el: toggleStatus, key: "showStatus", type: "checkbox" },
-  { el: toggleHypothesis, key: "showHypothesis", type: "checkbox" },
-  { el: toggleEligibility, key: "showEligibility", type: "checkbox" },
-  { el: toggleExclusions, key: "showExclusions", type: "checkbox" }
-];
-
-configInputs.forEach(input => {
-  input.el.addEventListener("input", () => {
-    state.options[input.key] = input.type === "checkbox" ? input.el.checked : input.el.value;
-    updatePreviewAndCode();
+    renderOutputs();
   });
 });
 
-// Helper for status background color
-function getStatusBg(status) {
-  if (!status) return "transparent";
-  switch (status.toLowerCase()) {
-    case "recruiting":
-      return "hsl(145, 63%, 96%)";
-    case "not yet recruiting":
-    case "soon":
-      return "hsl(215, 82%, 96%)";
-    case "active, not recruiting":
-      return "hsl(38, 92%, 96%)";
-    case "suspended":
-      return "hsl(355, 78%, 97%)";
-    default:
-      return "hsl(220, 16%, 95%)";
-  }
-}
-
-function getStatusTextCol(status) {
-  if (!status) return "inherit";
-  switch (status.toLowerCase()) {
-    case "recruiting":
-      return "hsl(145, 63%, 38%)";
-    case "not yet recruiting":
-    case "soon":
-      return "hsl(215, 82%, 45%)";
-    case "active, not recruiting":
-      return "hsl(38, 92%, 46%)";
-    case "suspended":
-      return "hsl(355, 78%, 56%)";
-    default:
-      return "hsl(220, 16%, 46%)";
-  }
-}
-
-// Escaping helper
-function escapeHTML(str) {
-  if (!str) return "";
-  return str.replace(/[&<>'"]/g, 
-    tag => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      "'": '&#39;',
-      '"': '&quot;'
-    }[tag] || tag)
-  );
-}
-
-// Rebuild generated HTML and update preview
-function updatePreviewAndCode() {
-  const opt = state.options;
-  
-  // Build Embed CSS style section
-  const customStyles = `
-<style>
-/* Telestroke trials directory styling */
-.telestroke-trials-wrapper {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  margin: 1.5rem 0;
-  width: 100%;
-  color: #1e293b;
-}
-.telestroke-table-container {
-  overflow-x: auto;
-  border: ${opt.borderWidth}px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  background-color: #ffffff;
-}
-.telestroke-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: ${opt.fontSize}px;
-}
-.telestroke-table th {
-  background-color: ${opt.primaryColor};
-  color: #ffffff;
-  font-weight: 600;
-  padding: 10px 14px;
-  border-bottom: 2px solid #cbd5e1;
-}
-.telestroke-table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid #e2e8f0;
-  vertical-align: top;
-}
-.telestroke-table tr:last-child td {
-  border-bottom: none;
-}
-.telestroke-table tr:hover {
-  background-color: #f8fafc;
-}
-.trial-badge-acronym {
-  font-weight: 700;
-  color: ${opt.primaryColor};
-  font-size: 1.1em;
-}
-.trial-badge-nct {
-  font-family: monospace;
-  font-size: 0.85em;
-  color: #64748b;
-  display: block;
-  margin-top: 2px;
-}
-.trial-link {
-  color: ${opt.accentColor};
-  text-decoration: none;
-  font-weight: 500;
-}
-.trial-link:hover {
-  text-decoration: underline;
-}
-.status-pill {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 9999px;
-  font-size: 0.75em;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-.status-recruiting { background-color: #f0fdf4; color: #166534; }
-.status-not-recruiting { background-color: #eff6ff; color: #1e40af; }
-.status-active-not-recruiting { background-color: #fffbeb; color: #92400e; }
-.status-suspended { background-color: #fef2f2; color: #991b1b; }
-.status-completed { background-color: #f8fafc; color: #475569; }
-.contact-item {
-  margin-bottom: 4px;
-}
-.contact-item:last-child {
-  margin-bottom: 0;
-}
-.contact-label {
-  font-size: 0.85em;
-  color: #64748b;
-  font-weight: 500;
-}
-</style>
-`;
-
-  // Build Table Head
-  let thColumns = `<th scope="col">Study</th>`;
-  if (opt.showHypothesis) thColumns += `<th scope="col">Hypothesis / Summary</th>`;
-  if (opt.showEligibility) thColumns += `<th scope="col">Eligibility</th>`;
-  if (opt.showExclusions) thColumns += `<th scope="col">Key Exclusions</th>`;
-  if (opt.showLocalPI) thColumns += `<th scope="col">Local PI</th>`;
-  if (opt.showCoordinator) thColumns += `<th scope="col">Research Coordinator</th>`;
-  if (opt.showStatus) thColumns += `<th scope="col">Status</th>`;
-
-  // Build Table Rows
-  let tableRows = "";
-  state.trials.forEach(trial => {
-    let row = `  <tr>\n`;
-    
-    // Study Column
-    row += `    <td>\n      <span class="trial-badge-acronym">${escapeHTML(trial.acronym)}</span>\n`;
-    if (opt.showNct && trial.nctId) {
-      row += `      <a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" rel="noopener noreferrer" class="trial-badge-nct trial-link">${escapeHTML(trial.nctId)}</a>\n`;
-    }
-    row += `    </td>\n`;
-
-    // Hypothesis Column
-    if (opt.showHypothesis) {
-      row += `    <td>${escapeHTML(trial.hypothesis || "—")}</td>\n`;
-    }
-
-    // Eligibility Column
-    if (opt.showEligibility) {
-      row += `    <td>\n`;
-      if (trial.eligibility) {
-        const items = trial.eligibility.split('\n').map(i => i.trim()).filter(Boolean);
-        if (items.length > 1) {
-          row += `      <ul style="padding-left: 20px; margin: 0;">\n`;
-          items.forEach(item => {
-            row += `        <li style="margin-bottom: 4px;">${escapeHTML(item)}</li>\n`;
-          });
-          row += `      </ul>\n`;
-        } else if (items.length === 1) {
-          row += `      ${escapeHTML(items[0])}\n`;
-        } else {
-          row += `      —\n`;
-        }
-      } else {
-        row += `      —\n`;
-      }
-      row += `    </td>\n`;
-    }
-
-    // Key Exclusions Column
-    if (opt.showExclusions) {
-      row += `    <td>\n`;
-      if (trial.exclusions) {
-        const items = trial.exclusions.split('\n').map(i => i.trim()).filter(Boolean);
-        if (items.length > 1) {
-          row += `      <ul style="padding-left: 20px; margin: 0;">\n`;
-          items.forEach(item => {
-            row += `        <li style="margin-bottom: 4px;">${escapeHTML(item)}</li>\n`;
-          });
-          row += `      </ul>\n`;
-        } else if (items.length === 1) {
-          row += `      ${escapeHTML(items[0])}\n`;
-        } else {
-          row += `      —\n`;
-        }
-      } else {
-        row += `      —\n`;
-      }
-      row += `    </td>\n`;
-    }
-    
-    // Local PI Column
-    if (opt.showLocalPI) {
-      row += `    <td>${escapeHTML(trial.localPI || "—")}</td>\n`;
-    }
-    
-    // Coordinator Column
-    if (opt.showCoordinator) {
-      row += `    <td>\n`;
-      if (trial.coordinator) {
-        row += `      <div class="contact-item"><strong>${escapeHTML(trial.coordinator)}</strong></div>\n`;
-      }
-      if (trial.email) {
-        row += `      <div class="contact-item"><a href="mailto:${escapeHTML(trial.email)}" class="trial-link">${escapeHTML(trial.email)}</a></div>\n`;
-      }
-      if (trial.phone) {
-        row += `      <div class="contact-item"><span class="contact-label">Tel:</span> <a href="tel:${escapeHTML(trial.phone)}" class="trial-link">${escapeHTML(trial.phone)}</a></div>\n`;
-      }
-      if (!trial.coordinator && !trial.email && !trial.phone) {
-        row += `      —\n`;
-      }
-      row += `    </td>\n`;
-    }
-    
-    // Status Column
-    if (opt.showStatus) {
-      const statusClass = getStatusClass(trial.status);
-      row += `    <td><span class="status-pill ${statusClass}">${escapeHTML(trial.status || "Unknown")}</span></td>\n`;
-    }
-    
-    row += `  </tr>\n`;
-    tableRows += row;
-  });
-
-  // Complete HTML code block
-  const generatedHTML = `<div class="telestroke-trials-wrapper">
-  <div class="telestroke-table-container">
-    <table class="telestroke-table" aria-label="Acute stroke trials directory">
-      <thead>
-        <tr>
-          ${thColumns}
-        </tr>
-      </thead>
-      <tbody>
-${tableRows}      </tbody>
-    </table>
-  </div>
-</div>`;
-
-  const finalEmbedCode = customStyles + generatedHTML;
-
-  // Update preview container
-  previewContainer.innerHTML = `<span class="preview-badge">Live Preview</span>` + finalEmbedCode;
-
-  // Update copy-pasteable code block
-  codeBlock.textContent = finalEmbedCode.trim();
-}
-
-// Get CSS status class
-function getStatusClass(status) {
-  if (!status) return "";
-  switch (status.toLowerCase()) {
-    case "recruiting":
-      return "status-recruiting";
-    case "not yet recruiting":
-    case "soon":
-      return "status-not-recruiting";
-    case "active, not recruiting":
-      return "status-active-not-recruiting";
-    case "suspended":
-      return "status-suspended";
-    case "completed":
-      return "status-completed";
-    default:
-      return "";
-  }
-}
-
-// Copy embed code to clipboard
-btnCopyCode.addEventListener("click", () => {
-  navigator.clipboard.writeText(codeBlock.textContent).then(() => {
-    // Show copy toast notification
-    toast.style.display = "block";
-    setTimeout(() => {
-      toast.style.display = "none";
-    }, 2500);
-  }).catch(err => {
-    alert("Could not copy code to clipboard: " + err);
+columnControls.forEach((select) => {
+  const key = select.dataset.column;
+  select.value = state.options.columnModes[key] || "auto";
+  select.addEventListener("change", () => {
+    state.options.columnModes[key] = select.value;
+    saveState();
+    renderOutputs();
   });
 });
 
-// Image Export handlers
-const btnCopyImage = document.getElementById("btn-copy-image");
-const btnDownloadImage = document.getElementById("btn-download-image");
-const btnCopyEmail = document.getElementById("btn-copy-email");
+btnToggleCode.addEventListener("click", () => {
+  const expanded = btnToggleCode.getAttribute("aria-expanded") === "true";
+  btnToggleCode.setAttribute("aria-expanded", String(!expanded));
+  btnToggleCode.textContent = expanded ? "Expand" : "Collapse";
+  codeBlock.hidden = expanded;
+  document.querySelector(".code-container")?.classList.toggle("is-collapsed", expanded);
+  if (!expanded) codeBlock.focus();
+});
 
-btnDownloadImage.addEventListener("click", () => {
-  const tableEl = previewContainer.querySelector(".telestroke-trials-wrapper");
-  if (!tableEl) return;
-  
-  html2canvas(tableEl, {
-    useCORS: true,
-    scale: 2,
-    backgroundColor: "#ffffff",
-    onclone: (clonedDoc) => {
-      const clonedWrapper = clonedDoc.querySelector(".telestroke-trials-wrapper");
-      if (clonedWrapper) {
-        clonedWrapper.style.width = "1200px";
-        clonedWrapper.style.maxWidth = "none";
-        clonedWrapper.style.backgroundColor = "#ffffff";
-        clonedWrapper.style.padding = "20px";
-        clonedWrapper.style.borderRadius = "8px";
-        clonedWrapper.style.boxShadow = "none";
-        
-        const clonedContainer = clonedWrapper.querySelector(".telestroke-table-container");
-        if (clonedContainer) {
-          clonedContainer.style.width = "100%";
-          clonedContainer.style.maxWidth = "none";
-          clonedContainer.style.overflow = "visible";
-          clonedContainer.style.border = `${state.options.borderWidth}px solid #e2e8f0`;
-        }
-        
-        const clonedTable = clonedWrapper.querySelector(".telestroke-table");
-        if (clonedTable) {
-          clonedTable.style.width = "100%";
-          clonedTable.style.maxWidth = "none";
-        }
-      }
+btnCopyCode.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(finalEmbedCode);
+    showToast("Current embed code copied.");
+  } catch (error) {
+    window.alert(`Could not copy code: ${error}`);
+  }
+});
+
+function updateDisclosureState() {
+  [contentDisclosure, appearanceDisclosure].forEach((details) => {
+    const label = details.querySelector(".disclosure-state");
+    if (label) label.textContent = details.open ? "Open" : "Closed";
+  });
+}
+
+const savedEditorSection = sessionStorage.getItem(STORAGE.editor);
+if (savedEditorSection === "appearance") {
+  contentDisclosure.open = false;
+  appearanceDisclosure.open = true;
+}
+
+[contentDisclosure, appearanceDisclosure].forEach((details) => {
+  details.addEventListener("toggle", () => {
+    if (!details.open) {
+      updateDisclosureState();
+      return;
     }
-  }).then(canvas => {
+    const other = details === contentDisclosure ? appearanceDisclosure : contentDisclosure;
+    other.open = false;
+    sessionStorage.setItem(STORAGE.editor, details === contentDisclosure ? "content" : "appearance");
+    updateDisclosureState();
+  });
+});
+updateDisclosureState();
+
+function updateLayoutButton() {
+  const label = btnToggleLayout.querySelector("span");
+  const icon = btnToggleLayout.querySelector(".layout-icon");
+  if (mobileMedia.matches) {
+    const cardsActive = state.previewMode === "cards";
+    label.textContent = cardsActive ? "Actual Table" : "Card Preview";
+    btnToggleLayout.title = cardsActive ? "Show the WYSIWYG table preview" : "Show the mobile card preview";
+    btnToggleLayout.setAttribute("aria-label", btnToggleLayout.title);
+    icon.innerHTML = cardsActive
+      ? `<rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="9" y1="4" x2="9" y2="20"></line>`
+      : `<rect x="4" y="3" width="16" height="7" rx="2"></rect><rect x="4" y="14" width="16" height="7" rx="2"></rect>`;
+  } else {
+    const stacked = workspace.classList.contains("stacked-layout");
+    label.textContent = stacked ? "Split View" : "Stacked View";
+    btnToggleLayout.title = stacked ? "Show editor and preview side by side" : "Stack editor and preview vertically";
+    btnToggleLayout.setAttribute("aria-label", btnToggleLayout.title);
+    icon.innerHTML = stacked
+      ? `<rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line>`
+      : `<rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="12" x2="21" y2="12"></line>`;
+  }
+}
+
+btnToggleLayout.addEventListener("click", () => {
+  if (mobileMedia.matches) {
+    state.previewMode = state.previewMode === "cards" ? "table" : "cards";
+    sessionStorage.setItem(STORAGE.preview, state.previewMode);
+    renderOutputs();
+  } else {
+    workspace.classList.toggle("stacked-layout");
+    localStorage.setItem(STORAGE.layout, workspace.classList.contains("stacked-layout") ? "stacked" : "split");
+  }
+  updateLayoutButton();
+});
+
+mobileMedia.addEventListener("change", () => {
+  renderOutputs();
+  updateLayoutButton();
+});
+
+if (localStorage.getItem(STORAGE.layout) === "stacked") workspace.classList.add("stacked-layout");
+
+function createCaptureSource() {
+  const host = document.createElement("div");
+  host.className = "export-capture-source";
+  host.innerHTML = finalEmbedCode;
+  document.body.appendChild(host);
+  const wrapper = host.querySelector(".telestroke-trials-wrapper");
+  wrapper.style.width = "1200px";
+  wrapper.style.margin = "0";
+  wrapper.style.padding = "20px";
+  wrapper.style.background = "#ffffff";
+  wrapper.querySelector(".telestroke-table-container").style.overflow = "visible";
+  return { host, wrapper };
+}
+
+async function captureTable() {
+  if (typeof window.html2canvas !== "function") throw new Error("Image export is still loading. Try again in a moment.");
+  const { host, wrapper } = createCaptureSource();
+  try {
+    return await window.html2canvas(wrapper, { useCORS: true, scale: 2, backgroundColor: "#ffffff" });
+  } finally {
+    host.remove();
+  }
+}
+
+document.getElementById("btn-download-image").addEventListener("click", async () => {
+  try {
+    const canvas = await captureTable();
     const link = document.createElement("a");
     link.download = "telestroke-acute-trials-table.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
-  }).catch(err => {
-    alert("Error generating image: " + err);
-  });
-});
-
-btnCopyImage.addEventListener("click", () => {
-  const tableEl = previewContainer.querySelector(".telestroke-trials-wrapper");
-  if (!tableEl) return;
-  
-  html2canvas(tableEl, {
-    useCORS: true,
-    scale: 2,
-    backgroundColor: "#ffffff",
-    onclone: (clonedDoc) => {
-      const clonedWrapper = clonedDoc.querySelector(".telestroke-trials-wrapper");
-      if (clonedWrapper) {
-        clonedWrapper.style.width = "1200px";
-        clonedWrapper.style.maxWidth = "none";
-        clonedWrapper.style.backgroundColor = "#ffffff";
-        clonedWrapper.style.padding = "20px";
-        clonedWrapper.style.borderRadius = "8px";
-        clonedWrapper.style.boxShadow = "none";
-        
-        const clonedContainer = clonedWrapper.querySelector(".telestroke-table-container");
-        if (clonedContainer) {
-          clonedContainer.style.width = "100%";
-          clonedContainer.style.maxWidth = "none";
-          clonedContainer.style.overflow = "visible";
-          clonedContainer.style.border = `${state.options.borderWidth}px solid #e2e8f0`;
-        }
-        
-        const clonedTable = clonedWrapper.querySelector(".telestroke-table");
-        if (clonedTable) {
-          clonedTable.style.width = "100%";
-          clonedTable.style.maxWidth = "none";
-        }
-      }
-    }
-  }).then(canvas => {
-    canvas.toBlob(blob => {
-      if (!blob) {
-        alert("Failed to generate image blob.");
-        return;
-      }
-      const item = new ClipboardItem({ "image/png": blob });
-      navigator.clipboard.write([item]).then(() => {
-        const imageToast = document.createElement("div");
-        imageToast.className = "copied-toast";
-        imageToast.textContent = "Table screenshot copied to clipboard!";
-        imageToast.style.display = "block";
-        document.body.appendChild(imageToast);
-        setTimeout(() => {
-          imageToast.remove();
-        }, 2500);
-      }).catch(err => {
-        alert("Failed to copy image to clipboard: " + err + "\n\nPlease use the 'Download PNG' button instead.");
-      });
-    }, "image/png");
-  }).catch(err => {
-    alert("Error generating image: " + err);
-  });
-});
-
-// Copy Rich HTML Table for Email clients (Gmail, Outlook, etc.)
-btnCopyEmail.addEventListener("click", () => {
-  const opt = state.options;
-  
-  // Build inline styled HTML representation of the table
-  let htmlString = `<table style="width: 100%; border-collapse: collapse; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: ${opt.fontSize}px; color: #1e293b; background-color: #ffffff; border: ${opt.borderWidth}px solid #e2e8f0; text-align: left;">`;
-  
-  // Table Head
-  htmlString += `<thead><tr>`;
-  const thStyle = `background-color: ${opt.primaryColor}; color: #ffffff; font-weight: 600; padding: 10px 14px; border: ${opt.borderWidth}px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; text-align: left;`;
-  
-  htmlString += `<th scope="col" style="${thStyle}">Study</th>`;
-  if (opt.showHypothesis) htmlString += `<th scope="col" style="${thStyle}">Hypothesis / Summary</th>`;
-  if (opt.showEligibility) htmlString += `<th scope="col" style="${thStyle}">Eligibility</th>`;
-  if (opt.showExclusions) htmlString += `<th scope="col" style="${thStyle}">Key Exclusions</th>`;
-  if (opt.showLocalPI) htmlString += `<th scope="col" style="${thStyle}">Local PI</th>`;
-  if (opt.showCoordinator) htmlString += `<th scope="col" style="${thStyle}">Research Coordinator</th>`;
-  if (opt.showStatus) htmlString += `<th scope="col" style="${thStyle}">Status</th>`;
-  htmlString += `</tr></thead><tbody>`;
-  
-  // Table Rows
-  state.trials.forEach(trial => {
-    htmlString += `<tr>`;
-    const tdStyle = `padding: 12px 14px; border: ${opt.borderWidth}px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: top;`;
-    
-    // Study column
-    htmlString += `<td style="${tdStyle}">`;
-    htmlString += `<span style="font-weight: 700; color: ${opt.primaryColor}; font-size: 1.1em;">${escapeHTML(trial.acronym)}</span>`;
-    if (opt.showNct && trial.nctId) {
-      htmlString += `<br><a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" target="_blank" rel="noopener noreferrer" style="font-family: monospace; font-size: 0.85em; color: ${opt.accentColor}; text-decoration: none; font-weight: 500;">${escapeHTML(trial.nctId)}</a>`;
-    }
-    htmlString += `</td>`;
-    
-    // Hypothesis Column
-    if (opt.showHypothesis) {
-      htmlString += `<td style="${tdStyle}">${escapeHTML(trial.hypothesis || "—")}</td>`;
-    }
-    
-    // Eligibility Column
-    if (opt.showEligibility) {
-      htmlString += `<td style="${tdStyle}">`;
-      if (trial.eligibility) {
-        const items = trial.eligibility.split('\n').map(i => i.trim()).filter(Boolean);
-        if (items.length > 1) {
-          htmlString += `<ul style="padding-left: 20px; margin: 0;">`;
-          items.forEach(item => {
-            htmlString += `<li style="margin-bottom: 4px;">${escapeHTML(item)}</li>`;
-          });
-          htmlString += `</ul>`;
-        } else if (items.length === 1) {
-          htmlString += escapeHTML(items[0]);
-        } else {
-          htmlString += `—`;
-        }
-      } else {
-        htmlString += `—`;
-      }
-      htmlString += `</td>`;
-    }
-    
-    // Key Exclusions Column
-    if (opt.showExclusions) {
-      htmlString += `<td style="${tdStyle}">`;
-      if (trial.exclusions) {
-        const items = trial.exclusions.split('\n').map(i => i.trim()).filter(Boolean);
-        if (items.length > 1) {
-          htmlString += `<ul style="padding-left: 20px; margin: 0;">`;
-          items.forEach(item => {
-            htmlString += `<li style="margin-bottom: 4px;">${escapeHTML(item)}</li>`;
-          });
-          htmlString += `</ul>`;
-        } else if (items.length === 1) {
-          htmlString += escapeHTML(items[0]);
-        } else {
-          htmlString += `—`;
-        }
-      } else {
-        htmlString += `—`;
-      }
-      htmlString += `</td>`;
-    }
-    
-    // Local PI Column
-    if (opt.showLocalPI) {
-      htmlString += `<td style="${tdStyle}">${escapeHTML(trial.localPI || "—")}</td>`;
-    }
-    
-    // Coordinator Column
-    if (opt.showCoordinator) {
-      htmlString += `<td style="${tdStyle}">`;
-      if (trial.coordinator) {
-        htmlString += `<div style="margin-bottom: 4px;"><strong>${escapeHTML(trial.coordinator)}</strong></div>`;
-      }
-      if (trial.email) {
-        htmlString += `<div style="margin-bottom: 4px;"><a href="mailto:${escapeHTML(trial.email)}" style="color: ${opt.accentColor}; text-decoration: none; font-weight: 500;">${escapeHTML(trial.email)}</a></div>`;
-      }
-      if (trial.phone) {
-        htmlString += `<div><span style="font-size: 0.85em; color: #64748b; font-weight: 500;">Tel:</span> <a href="tel:${escapeHTML(trial.phone)}" style="color: ${opt.accentColor}; text-decoration: none; font-weight: 500;">${escapeHTML(trial.phone)}</a></div>`;
-      }
-      if (!trial.coordinator && !trial.email && !trial.phone) {
-        htmlString += `—`;
-      }
-      htmlString += `</td>`;
-    }
-    
-    // Status Column
-    if (opt.showStatus) {
-      let statusBg = "#f8fafc";
-      let statusColor = "#475569";
-      const statusText = trial.status || "Unknown";
-      
-      if (trial.status.toLowerCase() === "recruiting") {
-        statusBg = "#f0fdf4";
-        statusColor = "#166534";
-      } else if (trial.status.toLowerCase() === "not yet recruiting" || trial.status.toLowerCase() === "enrolling by invitation") {
-        statusBg = "#eff6ff";
-        statusColor = "#1e40af";
-      } else if (trial.status.toLowerCase() === "active, not recruiting") {
-        statusBg = "#fffbeb";
-        statusColor = "#92400e";
-      } else if (trial.status.toLowerCase() === "suspended") {
-        statusBg = "#fef2f2";
-        statusColor = "#991b1b";
-      }
-      
-      htmlString += `<td style="${tdStyle}">`;
-      htmlString += `<span style="display: inline-block; padding: 3px 8px; border-radius: 9999px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; background-color: ${statusBg}; color: ${statusColor};">${escapeHTML(statusText)}</span>`;
-      htmlString += `</td>`;
-    }
-    
-    htmlString += `</tr>`;
-  });
-  htmlString += `</tbody></table>`;
-  
-  // Plain text fallback
-  let plainText = "";
-  state.trials.forEach(trial => {
-    plainText += `${trial.acronym.toUpperCase()} (${trial.nctId || "No NCT"})\n`;
-    if (opt.showHypothesis) plainText += `Hypothesis: ${trial.hypothesis || "—"}\n`;
-    if (opt.showLocalPI) plainText += `PI: ${trial.localPI || "—"}\n`;
-    if (opt.showCoordinator) plainText += `Coordinator: ${trial.coordinator || "—"} (${trial.email || ""})\n`;
-    plainText += `Status: ${trial.status || "—"}\n\n`;
-  });
-
-  const htmlBlob = new Blob([htmlString], { type: "text/html" });
-  const textBlob = new Blob([plainText], { type: "text/plain" });
-  const clipboardItem = new ClipboardItem({
-    "text/html": htmlBlob,
-    "text/plain": textBlob
-  });
-  
-  navigator.clipboard.write([clipboardItem]).then(() => {
-    const emailToast = document.createElement("div");
-    emailToast.className = "copied-toast";
-    emailToast.textContent = "HTML Table copied for email! Paste (Cmd+V) directly into Outlook or Gmail.";
-    emailToast.style.display = "block";
-    document.body.appendChild(emailToast);
-    setTimeout(() => {
-      emailToast.remove();
-    }, 3000);
-  }).catch(err => {
-    alert("Failed to copy table for email: " + err);
-  });
-});
-
-// Workspace Layout Toggler
-const btnToggleLayout = document.getElementById("btn-toggle-layout");
-const workspace = document.querySelector(".workspace");
-
-btnToggleLayout.addEventListener("click", () => {
-  const isStacked = workspace.classList.toggle("stacked-layout");
-  localStorage.setItem("telestroke_layout_preference", isStacked ? "stacked" : "split");
-  updateLayoutButton(isStacked);
-});
-
-function updateLayoutButton(isStacked) {
-  const span = btnToggleLayout.querySelector("span");
-  const svg = btnToggleLayout.querySelector(".layout-icon");
-  
-  if (isStacked) {
-    span.textContent = "Split View";
-    svg.innerHTML = `
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-    `;
-  } else {
-    span.textContent = "Stacked View";
-    svg.innerHTML = `
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-      <line x1="12" y1="3" x2="12" y2="21"></line>
-    `;
+  } catch (error) {
+    window.alert(`Error generating image: ${error}`);
   }
+});
+
+document.getElementById("btn-copy-image").addEventListener("click", async () => {
+  try {
+    const canvas = await captureTable();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("The image could not be generated.");
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    showToast("Current table image copied.");
+  } catch (error) {
+    window.alert(`Failed to copy image: ${error}`);
+  }
+});
+
+function inlineCell(trial, definition, colors) {
+  if (definition.key === "coordinator") {
+    const parts = [];
+    if (trial.coordinator) parts.push(`<strong>${escapeHTML(trial.coordinator)}</strong>`);
+    if (trial.email) parts.push(`<a href="mailto:${escapeHTML(trial.email)}" style="color:${colors.accent}">${escapeHTML(trial.email)}</a>`);
+    if (trial.phone) parts.push(`<a href="tel:${escapeHTML(trial.phone)}" style="color:${colors.accent}">${escapeHTML(trial.phone)}</a>`);
+    return parts.length ? parts.join("<br>") : "—";
+  }
+  if (definition.list) {
+    const items = splitLines(definition.value(trial));
+    return items.length > 1 ? `<ul style="margin:0;padding-left:18px">${items.map((item) => `<li>${escapeHTML(item)}</li>`).join("")}</ul>` : escapeHTML(items[0] || "—");
+  }
+  if (definition.status) return escapeHTML(trial.status || "Unknown");
+  return escapeHTML(definition.value(trial) || "—");
 }
 
-// Load layout preference on initialization
-const savedLayout = localStorage.getItem("telestroke_layout_preference");
-if (savedLayout === "stacked") {
-  workspace.classList.add("stacked-layout");
-  updateLayoutButton(true);
-} else {
-  updateLayoutButton(false);
+function buildEmailOutput(model) {
+  const opt = state.options;
+  const th = `background:${opt.primaryColor};color:#fff;font-weight:700;padding:10px 12px;border:1px solid #cbd5e1;text-align:left;`;
+  const td = `padding:11px 12px;border:1px solid #e2e8f0;vertical-align:top;`;
+  const head = [`<th scope="col" style="${th}">Study</th>`, ...model.columns.map((column) => `<th scope="col" style="${th}">${column.label}</th>`)].join("");
+  const rows = model.trials.map((trial) => {
+    const study = `<strong style="color:${opt.primaryColor}">${escapeHTML(trial.acronym || "Unnamed")}</strong>${trial.fullName ? `<br><span>${escapeHTML(trial.fullName)}</span>` : ""}${model.visible.nct && trial.nctId ? `<br><a href="https://clinicaltrials.gov/study/${escapeHTML(trial.nctId)}" style="color:${opt.accentColor}">${escapeHTML(trial.nctId)}</a>` : ""}`;
+    return `<tr><td style="${td}">${study}</td>${model.columns.map((column) => `<td style="${td}">${inlineCell(trial, column, { accent: opt.accentColor })}</td>`).join("")}</tr>`;
+  }).join("");
+  const html = `<table style="width:100%;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:${opt.fontSize}px;color:#1e293b"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+  const text = model.trials.map((trial) => {
+    const lines = [`${trial.acronym || "Unnamed"}${model.visible.nct && trial.nctId ? ` (${trial.nctId})` : ""}`];
+    model.columns.forEach((column) => lines.push(`${column.label}: ${column.value(trial) || "—"}`));
+    return lines.join("\n");
+  }).join("\n\n");
+  return { html, text };
 }
 
-// App Inits
+document.getElementById("btn-copy-email").addEventListener("click", async () => {
+  try {
+    const output = buildEmailOutput(getDirectoryModel());
+    if (typeof ClipboardItem === "function" && navigator.clipboard.write) {
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([output.html], { type: "text/html" }),
+        "text/plain": new Blob([output.text], { type: "text/plain" })
+      })]);
+    } else {
+      await navigator.clipboard.writeText(output.text);
+    }
+    showToast("Current directory copied for email.");
+  } catch (error) {
+    window.alert(`Failed to copy table for email: ${error}`);
+  }
+});
+
 renderEditorList();
-updatePreviewAndCode();
+renderOutputs();
+updateLayoutButton();
